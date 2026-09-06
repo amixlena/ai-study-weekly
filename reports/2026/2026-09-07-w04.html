@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>W04 学习计划解读｜LLM 最小底层与模型行为</title>
+  <link rel="stylesheet" href="../../assets/style.css" />
+  <style>
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px}.kpi b{display:block;font-size:24px;line-height:1.2;margin-top:4px}.kpi span{color:#64748b;font-size:13px}.callout{border-left:4px solid #6366f1;background:#f8faff;border-radius:10px;padding:14px 16px;margin:16px 0}.warn{border-left-color:#f59e0b;background:#fffbeb}.ok{border-left-color:#10b981;background:#ecfdf5}.muted{color:#64748b}.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#f1f5f9;font-size:12px;font-weight:700;margin-right:6px}.p0{background:#fee2e2;color:#991b1b}.p1{background:#fef3c7;color:#92400e}.p2{background:#e0f2fe;color:#075985}.task{border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin:16px 0;background:#fff}.task h3{margin:0 0 8px}.task-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.steps{margin:10px 0 0 20px}.steps li{margin:6px 0}.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0}.flow .node{background:#fff;border:1px solid #dbe2ea;border-radius:10px;padding:9px 12px;font-weight:700}.flow .arrow{color:#94a3b8;font-weight:700}.checklist{columns:2;column-gap:28px}.checklist li{break-inside:avoid;margin:7px 0}.small{font-size:13px}.section-note{margin-top:-8px;color:#64748b}.source-tag{font-size:12px;padding:2px 7px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:700}.source-tag.dynamic{background:#ecfeff;color:#155e75}.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.topbar .nav{margin:0}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}.mini{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:14px}.mini h4{margin:0 0 6px}.resource-list li{margin:10px 0}.strike{opacity:.65;text-decoration:line-through}@media(max-width:800px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.checklist{columns:1}.two-col{grid-template-columns:1fr}}@media(max-width:480px){.kpis{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<main class="container">
+  <div class="topbar">
+    <div class="nav"><a href="../../index.html">← 返回全部期数</a></div>
+    <div class="meta">V5.8 · 周一版预览 · 2026-09-07</div>
+  </div>
+
+  <section class="hero">
+    <div class="eyebrow">AI 应用工程 / Agent 工程 · Weekly Study Brief</div>
+    <h1>W04｜LLM 最小底层与模型行为</h1>
+    <p><strong>执行周期：2026-09-07—09-13。</strong> 本期按最新 V5.8 和实际完成度执行 W04，而不是按自然日历硬推到 W07。最近系统学习出现短期中断，因此本周从真正尚未完成的主线继续。</p>
+    <div class="toc" style="margin-top:18px">
+      <a href="#summary">本周结论</a><a href="#last">上周状态</a><a href="#priority">P0/P1/P2</a><a href="#tasks">任务拆解</a><a href="#resources">参考资料</a><a href="#time">时间分配</a><a href="#acceptance">验收</a>
+    </div>
+  </section>
+
+  <section id="summary" class="card">
+    <h2>1. 本周结论摘要</h2>
+    <div class="kpis">
+      <div class="kpi"><span>当前真实执行周</span><b>W04</b><span>不是日历 W07</span></div>
+      <div class="kpi"><span>标准时间预算</span><b>16 h</b><span>周六 8h + 周日 8h</span></div>
+      <div class="kpi"><span>资料 / 实践</span><b>≈47 / 53%</b><span>W04-W06 允许搭框架期略高输入</span></div>
+      <div class="kpi"><span>核心产出</span><b>4 类</b><span>API Demo + 参数实验 + Token 实验 + 流程图</span></div>
+    </div>
+    <div class="callout ok"><strong>一句话目标：</strong>本周结束时，你要能把“文本 → Token → Embedding → Transformer/Attention → Next Token Probability → Sampling → 新 Token → 循环生成”完整讲清，并能独立跑一次 LLM API、改参数、看 Token / Streaming / Error 行为。</div>
+    <div class="callout"><strong>周五 0–6h 是弹性扩容，不计入 P0 保底。</strong> 如果周五状态好，用于提前看资料或补实验；如果不学，不影响本周标准闭环。</div>
+  </section>
+
+  <section class="card">
+    <h2>2. W04 在长期路线中的位置</h2>
+    <div class="flow">
+      <span class="node">W01-W03 Python / Git 启动</span><span class="arrow">→</span>
+      <span class="node">W04 LLM 最小底层</span><span class="arrow">→</span>
+      <span class="node">W05 Structured Output + Agent 全景</span><span class="arrow">→</span>
+      <span class="node">W06 Tool Calling + Agent Loop</span>
+    </div>
+    <p>W04 的任务不是学会训练模型，而是建立足够支撑 AI 应用开发的模型行为认知。后面 Structured Output、Tool Calling、RAG、Agent 的很多工程决策，都会依赖你理解 Token、Context、Sampling、Streaming 和 API 行为。</p>
+  </section>
+
+  <section id="last" class="card">
+    <h2>3. 上周实际状态与欠账处理</h2>
+    <p class="section-note">这里不虚构一个“应该已经完成的 W03/W04”。V5.8 已明确：最近若干周系统学习短期中断，真实执行位置以完成度为准。</p>
+    <table class="task-table">
+      <thead><tr><th>状态</th><th>已知事实</th><th>本周如何处理</th></tr></thead>
+      <tbody>
+        <tr><td>已完成 / 已启动</td><td>Git 基础、Python 基础启动、学习仓库与基础执行流程</td><td>直接保留，不重新从头学</td></tr>
+        <tr><td>Just-in-Time 欠账</td><td>Type Hint、异常处理、OOP、uv / pyproject.toml、项目结构、基础 pytest 仍需后续按需补</td><td>本周只有真正阻塞 API Demo 时才补，不开 Python 系统课</td></tr>
+        <tr><td>主线进度</td><td>W04 尚未形成完整闭环</td><td><strong>本周从 W04 继续</strong>，不因日期推进到 W07</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn"><strong>本周不追历史 P1/P2：</strong>只补会阻塞 W04 Demo 的最小 Python / 环境知识。旧视频、旧扩展任务不形成永久学习债。</div>
+  </section>
+
+  <section id="priority" class="card">
+    <h2>4. 本周 P0 / P1 / P2</h2>
+    <div class="two-col">
+      <div class="mini"><h4><span class="pill p0">P0</span> LLM 工作机制</h4><p>Token、Tokenizer、Embedding、Attention、Transformer Block、Decoder-only、自回归生成。</p></div>
+      <div class="mini"><h4><span class="pill p0">P0</span> API / 模型行为</h4><p>Messages、Context Window、Input/Output Token、Temperature、Top-k、Top-p、Max Tokens、Streaming、Usage、Cost、Latency、常见 API Error。</p></div>
+      <div class="mini"><h4><span class="pill p1">P1</span> 有余力再做</h4><p>简单 timeout / retry、Seed / deterministic behavior、简单 Prompt 对模型行为的影响。</p></div>
+      <div class="mini"><h4><span class="pill p2">本周不做</span></h4><p>从零实现 Transformer、完整 Attention 数学推导、训练 LLM、SFT、RLHF、系统 PyTorch、通读 Happy-LLM。</p></div>
+    </div>
+  </section>
+
+  <section id="tasks" class="card">
+    <h2>5. 本周任务拆解</h2>
+    <table class="task-table">
+      <thead><tr><th>优先级</th><th>任务</th><th>预计时间</th><th>占比</th><th>可验证产出</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill p0">P0</span></td><td>A. Token / Tokenizer + 生成总流程</td><td>2.0h</td><td>12.5%</td><td>一页生成流程草图 + Token 小实验</td></tr>
+        <tr><td><span class="pill p0">P0</span></td><td>B. Embedding / Attention / Transformer / Decoder-only</td><td>3.0h</td><td>18.8%</td><td>概念图 + 闭卷解释</td></tr>
+        <tr><td><span class="pill p0">P0</span></td><td>C. LLM API / Messages / Context / Token Usage</td><td>3.0h</td><td>18.8%</td><td><code>llm_api_demo</code> + system/user 对比</td></tr>
+        <tr><td><span class="pill p0">P0</span></td><td>D. Temperature / Top-k / Top-p / Max Tokens 参数实验</td><td>2.5h</td><td>15.6%</td><td>固定 Prompt 参数对比记录</td></tr>
+        <tr><td><span class="pill p0">P0</span></td><td>E. Streaming / Cost / Latency / Error</td><td>2.0h</td><td>12.5%</td><td>Streaming 观察 + Usage/Latency 记录 + 一次故意错误</td></tr>
+        <tr><td><span class="pill p0">P0</span></td><td>F. Definition of Done：闭卷、修改、重写</td><td>2.5h</td><td>15.6%</td><td>最终 Markdown 说明 + 关闭资料重写核心</td></tr>
+        <tr><td><span class="pill p1">P1</span></td><td>G. timeout / retry / Seed / Prompt 影响</td><td>1.0h</td><td>6.2%</td><td>最小观察记录；P0 超时则取消</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="task">
+    <div class="task-meta"><span class="pill p0">P0</span><span class="pill">2.0h · 12.5%</span></div>
+    <h3>任务 A｜Token / Tokenizer + 生成总流程</h3>
+    <p><strong>要解决的问题：</strong>模型为什么不是“直接读一句中文”，而是先处理 Token；又为什么生成是一小步一小步接下一个 Token。</p>
+    <ol class="steps">
+      <li>先用中文理解 Token、Tokenizer、input token、output token、context window。</li>
+      <li>拿 3 组输入做 Token 对比：短中文、英文、代码 / 标点混合文本。</li>
+      <li>把完整生成过程画成一条链：文本 → Token → Embedding → Transformer → 概率 → Sampling → 新 Token。</li>
+      <li>闭卷回答：为什么 Token 数会影响成本、延迟和最大输入长度？</li>
+    </ol>
+    <p><strong>验收：</strong>能够不看资料解释“字符数 ≠ Token 数”，并把 Token 与 Context Window、Cost 连起来。</p>
+  </section>
+
+  <section class="task">
+    <div class="task-meta"><span class="pill p0">P0</span><span class="pill">3.0h · 18.8%</span></div>
+    <h3>任务 B｜Embedding / Attention / Transformer / Decoder-only</h3>
+    <p><strong>本周深度：</strong>只到 L1-L2。目标是解释用途与数据流，不要求手推公式或自己实现 Transformer。</p>
+    <ol class="steps">
+      <li><strong>Embedding：</strong>理解 Token ID 如何变成可计算的向量表示。</li>
+      <li><strong>Attention：</strong>重点解释“一个 Token 为什么需要参考上下文中的其他 Token”；Q/K/V 只需知道大致角色。</li>
+      <li><strong>Transformer Block：</strong>知道 Attention 是 Block 的核心组成之一，不需要展开训练细节。</li>
+      <li><strong>Decoder-only：</strong>理解 GPT 类模型为什么适合做 Next Token Prediction。</li>
+      <li>最后把 Attention 放回整个生成链，而不是孤立背概念。</li>
+    </ol>
+    <p><strong>验收：</strong>3 分钟解释 Attention，并明确说出本周“不要求从零实现 Transformer”。</p>
+  </section>
+
+  <section class="task">
+    <div class="task-meta"><span class="pill p0">P0</span><span class="pill">3.0h · 18.8%</span></div>
+    <h3>任务 C｜LLM API / Messages / Context / Token Usage</h3>
+    <p><strong>目标：</strong>从“会聊天”变成“知道应用代码发了什么、模型收到了什么、返回了什么”。</p>
+    <ol class="steps">
+      <li>跑通一个最小 LLM API 调用。</li>
+      <li>分别修改 system / user message，观察角色变化。</li>
+      <li>记录 request、response、usage、输入 / 输出 token。</li>
+      <li>逐步增加上下文，观察输入长度、延迟和回答变化。</li>
+      <li>不要把 API Key 写进代码仓库；使用环境变量或本地配置。</li>
+    </ol>
+    <p><strong>验收：</strong>能指出 Message、Context、Token Usage 在代码里分别在哪里；能独立修改 system message 并解释变化。</p>
+  </section>
+
+  <section class="task">
+    <div class="task-meta"><span class="pill p0">P0</span><span class="pill">2.5h · 15.6%</span></div>
+    <h3>任务 D｜采样参数实验</h3>
+    <p><strong>核心方法：</strong>不要只背定义，使用同一个 Prompt 重复实验，把参数差异变成可观察结果。</p>
+    <ol class="steps">
+      <li>固定 Prompt，比较较低与较高 Temperature。</li>
+      <li>理解 Top-p / Top-k 的作用边界；若当前模型不暴露某参数，则以概念理解和官方文档为准，不强行实验。</li>
+      <li>修改 Max Tokens / 最大输出长度，观察截断或输出长度变化。</li>
+      <li>记录：参数、输出差异、延迟、Token Usage。</li>
+    </ol>
+    <div class="callout warn"><strong>版本提醒：</strong>不同模型支持的采样参数不同。以你实际调用模型的当前官方文档为准，不照搬旧教程参数。</div>
+  </section>
+
+  <section class="task">
+    <div class="task-meta"><span class="pill p0">P0</span><span class="pill">2.0h · 12.5%</span></div>
+    <h3>任务 E｜Streaming / Cost / Latency / Error</h3>
+    <ol class="steps">
+      <li>跑一次普通返回，再跑一次 Streaming，描述用户体验差异。</li>
+      <li>记录一次请求的 latency 和 token usage；理解二者为什么是 AI 应用工程指标。</li>
+      <li>故意制造至少一个错误：非法参数、缺失 Key、错误模型名或其他安全可控的 API Error。</li>
+      <li>读 traceback / error response，而不是直接让 AI 替你修完。</li>
+    </ol>
+    <p><strong>验收：</strong>能解释 Streaming 不是“模型更快”，而是更早把部分结果展示给调用方；能说出至少一种 API 错误的处理思路。</p>
+  </section>
+
+  <section class="task">
+    <div class="task-meta"><span class="pill p0">P0</span><span class="pill">2.5h · 15.6%</span></div>
+    <h3>任务 F｜Definition of Done：闭卷解释 + 修改 + 重写</h3>
+    <ol class="steps">
+      <li>关闭资料，重新画一次 LLM 生成流程图。</li>
+      <li>从空白 / 骨架重新写一次最小 API 调用核心部分。</li>
+      <li>自己改至少一个 Message 和两个参数，并预测结果后再运行。</li>
+      <li>把一次正常路径 + 一次错误路径记录到 Markdown。</li>
+      <li>最后回答“为什么 W04 对后面的 Structured Output / Agent / RAG 有用”。</li>
+    </ol>
+  </section>
+
+  <section id="resources" class="card">
+    <h2>6. 本周参考资料</h2>
+    <p class="section-note">先固定主资料，再补少量动态资料；不因为资源很多扩大 W04 范围。</p>
+    <h3>6.1 固定主资料</h3>
+    <ul class="resource-list">
+      <li><span class="source-tag">主资料</span> <a href="https://speech.ee.ntu.edu.tw/~hylee/ml/2026-spring.php" target="_blank" rel="noopener">李宏毅 Machine Learning 2026 Spring 课程主页</a>：用来定位本阶段李宏毅课程与讲义；W04 只挑 Token / 生成机制 / Attention / Transformer 相关内容。</li>
+      <li><span class="source-tag">主资料</span> <a href="https://developers.openai.com/api/reference/" target="_blank" rel="noopener">当前模型 API Reference</a>：确认 Messages / Responses、Streaming、Usage、参数与错误行为。版本敏感内容以官方文档为准。</li>
+      <li><span class="source-tag">辅助</span> Happy-LLM：仅当 Tokenizer / Embedding / Attention 某一概念仍不清楚时查缺补漏，不通读。</li>
+      <li><span class="source-tag">辅助</span> LLM Cookbook：只看 Messages / API / Prompt 相关内容，不另开第二套系统课程。</li>
+    </ul>
+
+    <h3>6.2 动态短视频 / 补充资料</h3>
+    <table class="task-table">
+      <thead><tr><th>知识点</th><th>资料</th><th>时长 / 热度</th><th>建议范围</th><th>看完后的输出</th></tr></thead>
+      <tbody>
+        <tr><td>生成式 AI 总体机制</td><td><a href="https://www.youtube.com/watch?v=TigfpYPJk1s" target="_blank" rel="noopener">李宏毅｜一堂课搞懂生成式人工智慧的原理</a></td><td>约 1h45m；官方频道，30万+播放</td><td>作为固定主课按 W04 主题选择相关段落，不要求整段一次看完</td><td>闭卷画生成流程；解释 Autoregressive Generation</td></tr>
+        <tr><td>Self-Attention</td><td><a href="https://www.bilibili.com/video/BV12YzsB5EuP/" target="_blank" rel="noopener">李宏毅 Self-Attention 上</a></td><td>28:24</td><td>优先看“上”；下集 46:04 仅在上集仍不清楚时继续</td><td>解释为什么 Token 要关注其他 Token，说明 Q/K/V 大致作用</td></tr>
+        <tr><td>Transformer</td><td><a href="https://www.bilibili.com/video/BV12YzsB5EuP/" target="_blank" rel="noopener">同系列 Transformer 上</a></td><td>32:54</td><td>只看 Transformer 上；下集 60:40 默认不列为刚性输入</td><td>把 Attention 放回 Transformer / 生成总流程</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">说明：Bilibili 条目为课程转载 / 整理页，用于中文观看便利；关键概念仍以李宏毅课程与官方 API 文档校准。</p>
+
+    <h3>6.3 本周官方文档只查这些</h3>
+    <ul class="resource-list">
+      <li><a href="https://developers.openai.com/api/reference/" target="_blank" rel="noopener">API Reference</a>：确认当前请求 / 响应字段。</li>
+      <li><a href="https://developers.openai.com/api/docs/models" target="_blank" rel="noopener">Models</a>：确认实际模型的 context、supported features 与参数差异。</li>
+      <li><a href="https://developers.openai.com/api/docs/guides/latest-model" target="_blank" rel="noopener">Latest model guidance</a>：只在你用最新模型时查参数支持和迁移注意事项。</li>
+    </ul>
+  </section>
+
+  <section id="time" class="card">
+    <h2>7. 推荐执行顺序与时间</h2>
+    <table class="task-table">
+      <thead><tr><th>时间块</th><th>建议内容</th><th>目标</th></tr></thead>
+      <tbody>
+        <tr><td>周五可选 0–2h</td><td>提前看主课 / Attention 短视频；不做刚性任务</td><td>周末减少输入压力</td></tr>
+        <tr><td>周六上午 4h</td><td>A Token + B Embedding / Attention 前半</td><td>建立生成机制骨架</td></tr>
+        <tr><td>周六下午 4h</td><td>B Transformer + C API / Messages</td><td>从概念进入代码</td></tr>
+        <tr><td>周日上午 4h</td><td>C API 完成 + D 参数实验</td><td>形成可运行 Demo 与实验记录</td></tr>
+        <tr><td>周日下午 4h</td><td>E Streaming / Error + F 闭卷验收；有余力做 G</td><td>完成 Definition of Done</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>输入比例：</strong>约 7.5h（46.9%）；<strong>实践 / 实验 / Debug / 验收：</strong>约 8.5h（53.1%）。这符合 V5.8 对 W04-W06 搭框架期可临时放宽至约 45%–50% 输入的规则。</div>
+  </section>
+
+  <section class="card">
+    <h2>8. 用户 / ChatGPT / Codex 分工</h2>
+    <table class="task-table">
+      <thead><tr><th>角色</th><th>负责什么</th><th>不负责什么</th></tr></thead>
+      <tbody>
+        <tr><td>你</td><td>看核心资料、自己运行实验、修改参数、读错误、闭卷复述和重写</td><td>不把“看懂 AI 代码”当成掌握</td></tr>
+        <tr><td>ChatGPT</td><td>把难概念重组为中文、给最小示例、Hint、Debug 辅助、验收题</td><td>不替代核心代码独立实现和最终解释</td></tr>
+        <tr><td>Codex</td><td>在明确边界后帮助读仓库、做小范围修改、运行测试、Review</td><td>不一次生成大量你无法解释的代码</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="acceptance" class="card">
+    <h2>9. 周末闭卷验收清单</h2>
+    <ul class="checklist">
+      <li>□ 不看资料解释 Token / Tokenizer。</li>
+      <li>□ 解释 Embedding 是什么、为什么需要向量表示。</li>
+      <li>□ 解释 Attention 为什么需要让 Token 参考上下文。</li>
+      <li>□ 说清 Q / K / V 大致角色，不要求公式。</li>
+      <li>□ 解释 Decoder-only 与 Next Token Prediction 的关系。</li>
+      <li>□ 完整画出自回归生成循环。</li>
+      <li>□ 独立运行一次最小 LLM API 调用。</li>
+      <li>□ 修改 system / user message 并解释影响。</li>
+      <li>□ 改至少两个可用参数并记录结果。</li>
+      <li>□ 观察并解释一次 Streaming。</li>
+      <li>□ 记录一次 Token Usage、Latency / Cost 相关信息。</li>
+      <li>□ 故意制造并读懂至少一个 API / 参数错误。</li>
+      <li>□ 关闭资料重写核心 API 调用或从骨架独立完成。</li>
+      <li>□ 能解释 W04 如何支撑 W05 Structured Output / Agent。</li>
+    </ul>
+    <div class="callout ok"><strong>Definition of Done：</strong>有可运行 Demo + 正常路径 + 一个异常路径 + 能解释 + 能修改 + 关闭资料重写核心。只“看完视频”不算完成。</div>
+  </section>
+
+  <section class="card">
+    <h2>10. 本周产出目录建议</h2>
+    <pre><code>W04/
+├── llm_api_demo.py
+├── token_experiment.md
+├── parameter_experiment.md
+├── llm_generation_flow.md
+└── README.md</code></pre>
+    <p class="small muted">目录只是执行建议；如果你的学习仓库已有 W04 规范，以仓库已有结构为准，不重复造同名文件。</p>
+  </section>
+
+  <div class="nav"><a href="../../index.html">← 返回历史归档</a></div>
+  <footer class="footer">公开学习周报 · 依据 V5.8 当前权威学习计划生成 · 不包含公司内部数据、代码、SQL、指标、Prompt 或未公开信息。</footer>
+</main>
+</body>
+</html>
