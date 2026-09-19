@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>W06 周计划解读｜Tool Calling + Agent Loop</title>
+<link rel="stylesheet" href="../../assets/style.css?v=weekly-20260919">
+<meta name="description" content="W06 周计划解读：Tool Calling、参数校验、ReAct 与 Agent Loop。2026-09-21—09-27，16 小时。">
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a><nav class="page-nav" aria-label="页面章节导航"><div class="page-nav-inner">
+<a class="brand" href="../../index.html">AI 学习<span> / WEEKLY</span></a><div class="nav-links">
+<a href="#summary">本周摘要</a><a href="#priority">任务与程度</a><a href="#details">逐项解读</a><a href="#resources">资料与方法</a><a href="#time">时间安排</a><a href="#acceptance">产出验收</a><a href="#status">整体进度</a>
+</div>
+</div></nav><main class="container" id="main-content">
+<nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="w01.html">W01</a><a href="w02.html">W02</a><a href="w03.html">W03</a><a href="2026-09-07-w04.html">W04</a><a href="2026-09-14-w05.html">W05</a><a href="2026-09-21-w06.html" aria-current="page">W06</a></nav><section class="hero" id="overview"><div class="eyebrow">WEEK 06 · 每周学习计划解读</div>
+<h1>Tool Calling<span class="title-plus"> + </span>Agent Loop</h1>
+<p class="lead">亲手写出一个能调用工具、处理失败，并正确停止的最小 Agent。</p>
+<div class="hero-meta">
+<span class="chip">下周预备版</span><span class="chip">2026.09.21—09.27</span><span class="chip">标准容量：16 小时</span><span class="chip">Master Plan V5.8</span>
+</div>
+<div class="intro">
+<div class="hero-note">
+<small>本期两行概要</small><p>以 Hello-Agents 为主教材，学习工具定义、参数校验、结果回传与最小 Agent 循环。</p>
+<p>交付两个工具及验证脚本，覆盖正常调用、直接回答、参数错误、工具失败和步数上限。</p>
+</div>
+<div class="calendar">
+<small>本周交付</small><div>
+<strong>01</strong><span>两个工具 + Agent Loop</span>
+</div>
+<div>
+<strong>02</strong><span>正常与异常验证</span>
+</div>
+<div>
+<strong>03</strong><span>独立修改与闭卷解释</span>
+</div>
+</div>
+</div>
+<p class="muted source-note">编制日期：2026-09-19。原定时任务锚点：W04＝9/07–9/13，W05＝9/14–9/20，W06＝9/21–9/27；本页为 W06 预备版。</p></section><section class="card" id="summary"><h2>
+<span class="section-num">01</span>本周摘要</h2>
+<div class="kpis">
+<div class="kpi">
+<span>执行周</span><b>W06</b><span>9 月 21–27 日</span>
+</div>
+<div class="kpi">
+<span>标准容量</span><b>16h</b><span>周六 8h + 周日 8h</span>
+</div>
+<div class="kpi">
+<span>核心任务</span><b>4 + 1</b><span>四项实践 + 独立验收</span>
+</div>
+<div class="kpi">
+<span>工具数量</span><b>至少 2 个</b><span>覆盖基本选择行为</span>
+</div>
+</div>
+    <div class="callout ok">
+<strong>一句话目标：</strong>自己写出最小 Agent，完成“模型请求 → 校验 → 工具执行 → 结果回传 → 下一步决策”的闭环，并在无需工具、调用失败和达到步数上限时正确结束。</div>
+    <p>本期是 2026-09-21—09-27 的预备版（编制于 9 月 19 日）。按 W05 核心任务已完成排程；如结构化输出或本地校验仍阻塞，只先补这个前置 P0。资料、实验、小检查和最终验收合计 16h，不额外叠加工时。</p></section><section class="card" id="priority"><h2>
+<span class="section-num">02</span>任务与程度</h2>
+<p>W05 让模型输出可以被程序可靠读取；W06 让程序依据模型请求执行函数，并将真实执行结果交回模型。你要掌握的是整个控制流程，而不只是跑通一条示例。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="表格 1，窄屏可横向滚动"><table class="task-table">
+<thead><tr>
+<th style="width:10%" scope="col">优先级</th>
+<th style="width:27%" scope="col">任务</th>
+<th scope="col">掌握程度与本周边界</th>
+<th style="width:10%" scope="col">建议时长</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><span class="tag p0">P0</span></td>
+<td><a href="#task-1">工具定义与参数校验</a></td>
+<td>Tool Calling 目标 L3：能定义名称、描述、参数结构（Schema），读取请求、验证参数并映射到函数。</td>
+<td>3h</td>
+</tr>
+<tr>
+<td><span class="tag p0">P0</span></td>
+<td><a href="#task-2">一次完整工具调用</a></td>
+<td>L3：接收请求、执行工具、返回结果，再让模型继续回答；能处理无需工具的直接回答。</td>
+<td>3h</td>
+</tr>
+<tr>
+<td><span class="tag p0">P0</span></td>
+<td><a href="#task-3">ReAct 与 Agent Loop</a></td>
+<td>ReAct L2、Loop L3：自己写循环、保留必要上下文、设置最大步数与终止条件。</td>
+<td>5h</td>
+</tr>
+<tr>
+<td><span class="tag p0">P0</span></td>
+<td><a href="#task-4">工具失败与边界处理</a></td>
+<td>L2–L3：区分参数错误和执行失败，明确反馈错误，避免无限执行。</td>
+<td>3h</td>
+</tr>
+<tr>
+<td><span class="tag p0">P0 验收</span></td>
+<td><a href="#task-5">独立修改与闭卷检查</a></td>
+<td>能增加工具、修改 Schema、定位参数问题，并从骨架补完核心循环。</td>
+<td>2h</td>
+</tr>
+<tr>
+<td><span class="tag p1">P1</span></td>
+<td>多工具选择、简单 retry / logging、request / trace id</td>
+<td>核心任务完成后推进；进一步打磨选择行为、重试和日志，不占用核心验收时间。</td>
+<td>弹性</td>
+</tr>
+<tr>
+<td><span class="pill">L1 概念</span></td>
+<td>State / Memory 概念</td>
+<td>L1：能解释当前任务状态、对话历史和长期记忆的区别，融入循环学习。</td>
+<td>含上项</td>
+</tr>
+<tr>
+<td colspan="3"><strong>标准容量合计（含最终验收）</strong></td>
+<td><strong>16h</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p class="muted">L1＝能解释用途；L2＝能独立写 Demo；L3＝能在当前项目中组织代码、处理异常并修改扩展。时长是本期执行拆分，优先级和能力目标来自 V5.8。</p>
+<div class="notice"><p><strong>两个工具的最低要求：</strong>原计划将“多 Tool 选择”列为 P1，同时在实践和产出中要求至少两个工具及选择验证。本期保留两个简单工具和基本选择验证；更多工具、复杂路由放到后续。</p></div>
+<p><strong>本周暂不展开：</strong>LangGraph、多 Agent、复杂状态持久化、长期 Memory、Agentic RL、复杂 Planning Framework。Python 类型、异常和基础测试只按当前需要补。</p>
+</section>
+
+<section class="card" id="details"><h2>
+<span class="section-num">03</span>逐项解读</h2>
+<nav class="task-jumps" aria-label="任务快捷跳转"><a href="#task-1">1. 工具定义与参数校验</a><a href="#task-2">2. 一次完整工具调用</a><a href="#task-3">3. ReAct 与 Agent Loop</a><a href="#task-4">4. 失败与边界处理</a><a href="#task-5">5. 独立修改与闭卷验收</a></nav><p>建议用一个“学习助手”贯穿本周。这是为便于执行设计的练习：资料使用本地样例字典，不依赖额外搜索服务或数据库。</p>
+<div class="two-col">
+<div class="mini">
+<h3><code>get_week_plan(week)</code></h3>
+<p>从样例字典读取指定周次的学习任务。</p>
+<p class="muted">例：“查一下 W06 学什么。”</p>
+</div>
+<div class="mini">
+<h3><code>calculate_hours(days, hours_per_day)</code></h3>
+<p>计算总学习时长；明确参数类型和范围。</p>
+<p class="muted">例：“两天，每天 8 小时，一共多少小时？”</p>
+</div>
+</div>
+
+<article class="task" id="task-1"><div class="task-head">
+<h3>任务一：工具定义与参数校验</h3>
+<span class="duration">3 小时</span>
+</div>
+<div class="task-meta">
+<span class="pill p0">P0</span><span class="pill">Tool Calling L3</span>
+</div>
+<p><strong>要解决的问题：</strong>模型怎样知道有哪些工具、每个工具何时使用，以及参数该长什么样。</p>
+<p>对本周自定义的 Python 工具，模型输出工具请求，你的程序执行实际函数。工具描述供模型选择，参数 Schema 说明输入结构，本地校验负责发现不符合约束的请求。仅仅在 Prompt 中写“你可以查课表”，还没有完成工具接入。</p>
+<ol>
+<li>先复跑 W05 的结构化输出与 Pydantic 校验示例，确认成功和失败路径都能解释。</li>
+<li>直接在 Python 中调用两个工具，保证函数本身能正常工作。</li>
+<li>为工具写名称、清晰描述和参数结构，将工具名对应到函数。</li>
+<li>为天数、每天时长等参数设置合理约束，故意传入缺字段或无法转换的类型。</li>
+</ol>
+<div class="task-guide">
+<h4>这项任务怎么学</h4>
+<p><strong>资料：</strong><a href="#r-hello">Hello-Agents 4.2.2</a>；<a href="#r-schema">官方工具定义</a>；<a href="#r-pydantic">Pydantic Models</a>。</p>
+<p><strong>方法：</strong>AI 解释“函数 / Schema / 校验”的关系 → 官方页面核对字段 → 你先写 → 运行合法与非法参数 → AI 检查。</p>
+<p><strong>产出与验收：</strong>两个可直接调用的函数、对应参数模型；能指出非法输入在哪一层被识别。</p>
+<p><strong>建议时长：</strong>3h：复跑 W05 校验 0.5h；工具 Schema 与接口阅读 0.75h；实现两个函数和参数校验 1.25h；反例检查 0.5h。</p>
+</div></article>
+
+<article class="task" id="task-2"><div class="task-head">
+<h3>任务二：跑通一次完整工具调用</h3>
+<span class="duration">3 小时</span>
+</div>
+<div class="task-meta">
+<span class="pill p0">P0</span><span class="pill">Tool Calling L3</span>
+</div>
+<p><strong>要解决的问题：</strong>模型提出调用请求以后，怎样得到真实结果，并利用结果回答用户。</p>
+<ol>
+<li>把工具定义与用户问题交给模型，检查模型返回的工具名称、参数与调用标识。</li>
+<li>校验参数，交给对应的 Python 函数执行。</li>
+<li>保留模型的调用记录，按照供应商协议返回工具结果，并关联正确的调用标识。</li>
+<li>再次调用模型，检查答案是否依据真实工具结果。</li>
+<li>加一个“你好”之类无需工具的问题，验证直接回答路径。</li>
+</ol>
+<div class="task-guide">
+<h4>这项任务怎么学</h4>
+<p><strong>资料：</strong><a href="#r-tools">官方工具调用流程</a>与<a href="#r-handle">调用处理、结果回传</a>。</p>
+<p><strong>方法：</strong>跟官方最小示例跑一次 → 换成自己的工具与问题 → 观察每步输入输出 → 关闭示例复述完整往返。</p>
+<p><strong>产出与验收：</strong>一条真实 API 的正常调用记录；能指出函数确实执行的证据，工具结果确实回传的位置，以及直接回答时如何结束。</p>
+<p><strong>建议时长：</strong>3h：官方最小协议示例 0.75h；独立接入请求、执行和回传 1.5h；直接回答与调用记录检查 0.75h。</p>
+</div></article>
+
+<article class="task" id="task-3"><div class="task-head">
+<h3>任务三：理解 ReAct，手写 Agent Loop</h3>
+<span class="duration">5 小时</span>
+</div>
+<div class="task-meta">
+<span class="pill p0">P0</span><span class="pill">ReAct L2 · Loop L3</span>
+</div>
+<p><strong>要解决的问题：</strong>一次结果可能不足以完成任务，程序需要允许模型根据反馈继续决定下一步。</p>
+<p>ReAct 本周掌握“行动得到观察，观察影响下一步决策”的基本思想。Agent Loop 则把模型调用、工具执行、上下文更新与停止判断写进程序。当前 State 只需理解为本次任务正在使用的信息和执行状态；长期记忆暂不实现。</p>
+<ol>
+<li>读 Hello-Agents 4.2.1 的流程，再读 4.2.3 的循环实现；用自己的话描述各部分职责。</li>
+<li>先自己写一个同步循环骨架：调用模型、判断返回类型、执行工具、写回结果。</li>
+<li>设置 <code>max_steps</code>，并在说明中明确“步数”采用什么计数口径，例如模型调用轮数。</li>
+<li>为最终回答设置正常退出，为达到上限设置明确的未完成状态。</li>
+<li>保留本次运行必要的调用记录；新任务开始时重新初始化，避免样例任务串状态。</li>
+</ol>
+<div class="notice"><p><strong>教材与接口的分工：</strong>Hello-Agents 4.2 用文本格式演示 ReAct。本周用它理解控制流，工具请求与回传按所用模型的原生 Tool Calling 接口实现。调试重点是请求、参数、执行结果与终止原因。</p></div>
+<div class="task-guide">
+<h4>这项任务怎么学</h4>
+<p><strong>资料：</strong><a href="#r-hello">Hello-Agents 4.1、4.2.1、4.2.3、4.2.4</a>；当前模型官方接口文档。</p>
+<p><strong>方法：</strong>教材建立结构 → AI 解释数据流 → 你从骨架自己写 → 遇到问题先看变量和报错 → AI 给逐级提示 → 关闭答案补写循环。</p>
+<p><strong>产出与验收：</strong>可运行的最小 Agent；能讲清每次继续执行的依据，以及正常结束和步数耗尽的区别。</p>
+<p><strong>建议时长：</strong>5h：Hello-Agents 与控制流讲解 1.25h；手写循环和上下文更新 2.5h；步数上限与停止实验 0.75h；闭卷画图 0.5h。</p>
+</div>
+<figure class="flow"><svg viewbox="0 0 650 625" role="img" aria-labelledby="flow-title flow-desc"><title id="flow-title">最小 Agent 循环</title>
+<desc id="flow-desc">问题进入循环，先检查剩余步数，再调用模型。最终回答则结束；工具调用则校验执行并回传结果，然后继续检查步数。没有剩余步数时停止并记录未完成。</desc><defs><marker id="arrow" viewbox="0 0 10 10" refx="8" refy="5" markerwidth="7" markerheight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#73968a"></path></marker></defs><g fill="none" stroke="#73968a" stroke-width="2" marker-end="url(#arrow)"><path d="M280 65V92"></path><path d="M280 150V189"></path><path d="M280 245V278"></path><path d="M280 337V385"></path><path d="M280 441V480"></path><path d="M280 536V568H62V121H170"></path><path d="M390 121H448"></path><path d="M390 307H448"></path></g><g fill="#f0f6f2" stroke="#c2d7ca"><rect x="170" y="12" width="220" height="53" rx="10"></rect><rect x="170" y="92" width="220" height="58" rx="10"></rect><rect x="170" y="189" width="220" height="56" rx="10"></rect><rect x="170" y="278" width="220" height="59" rx="10"></rect><rect x="170" y="385" width="220" height="56" rx="10"></rect><rect x="170" y="480" width="220" height="56" rx="10"></rect></g><g fill="#fff6e5" stroke="#e0c58c"><rect x="448" y="92" width="188" height="58" rx="10"></rect></g><g fill="#e5eee9" stroke="#c2d7ca"><rect x="448" y="278" width="188" height="59" rx="10"></rect></g><g fill="#21313c" text-anchor="middle" font-size="17"><text x="280" y="46">用户问题与上下文</text><text x="280" y="127">还有剩余步数？</text><text x="280" y="224">调用模型</text><text x="280" y="314">模型返回什么？</text><text x="280" y="420">校验参数并执行工具</text><text x="280" y="515">写回结果或错误</text><text x="542" y="117" font-size="15">达到上限后停止</text><text x="542" y="137" font-size="12">明确记录：尚未完成</text><text x="542" y="314">返回最终答案</text></g><g fill="#627078" font-size="13"><text x="291" y="175">有</text><text x="413" y="110">无</text><text x="293" y="365">工具调用</text><text x="404" y="264">最终回答</text><text x="106" y="596">回传观察结果，再决定是否继续</text></g></svg><figcaption class="caption">需要能闭卷画出并解释的数据流。具体消息字段以所用模型的官方协议为准。</figcaption></figure>
+</article>
+
+<article class="task" id="task-4"><div class="task-head">
+<h3>任务四：处理失败与边界</h3>
+<span class="duration">3 小时</span>
+</div>
+<div class="task-meta">
+<span class="pill p0">P0</span><span class="pill">L2–L3</span>
+</div>
+<p><strong>要解决的问题：</strong>成功示例之外，程序在输入无效、函数失败、模型持续调用工具时，仍能给出清楚的执行结果。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="表格 2，窄屏可横向滚动"><table class="task-table">
+<thead><tr>
+<th scope="col">情况</th>
+<th scope="col">要实现的行为</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>参数错误</td>
+<td>捕获校验错误，不执行非法参数；形成明确的错误信息。</td>
+</tr>
+<tr>
+<td>工具执行失败</td>
+<td>捕获预期的执行异常，将失败信息交回模型，或按预先定义的规则终止。</td>
+</tr>
+<tr>
+<td>达到最大步数</td>
+<td>停止继续调用，输出“达到上限，任务未完成”的状态。</td>
+</tr>
+<tr>
+<td>无需工具</td>
+<td>正常返回答案，工具执行次数为 0。</td>
+</tr>
+</tbody>
+</table></div>
+<div class="task-guide">
+<h4>这项任务怎么学</h4>
+<p><strong>资料：</strong><a href="#r-pydantic">Pydantic 校验错误</a>、<a href="#r-handle">官方工具结果与错误处理</a>、Hello-Agents 4.2.4。</p>
+<p><strong>方法：</strong>自己先写预期结果 → 故意制造失败 → 对照实际行为 → Debug → AI 检查遗漏。不要等待真实模型随机犯错，可以用固定模拟响应触发边界。</p>
+<p><strong>产出与验收：</strong>失败样例及验证脚本；每个场景都能说明失败位置、处理方式、是否继续，以及最后状态。</p>
+<p><strong>建议时长：</strong>3h：按需查错误处理 0.5h；构造异常响应与失败样例 1.5h；Debug 与状态核对 1h。</p>
+</div></article>
+
+<article class="task" id="task-5"><div class="task-head">
+<h3>任务五：独立修改与闭卷验收</h3>
+<span class="duration">2 小时</span>
+</div>
+<div class="task-meta">
+<span class="pill p0">P0 验收</span><span class="pill">独立运行与解释</span>
+</div>
+<p>关闭完整答案，从循环骨架补完核心逻辑；再修改一个字段约束，或增加一个简单工具。修改后重新跑正常与异常验证。</p>
+<div class="task-guide">
+<h4>这项任务怎么学</h4>
+<p><strong>资料：</strong>自己的代码和下方验收表；卡住时先写下问题，再查对应页面。</p>
+<p><strong>方法：</strong>你独立操作 → ChatGPT 提问检查解释 → Codex 帮助检查代码与测试；学习成果不能只停在“看懂生成的代码”。</p>
+<p><strong>产出与验收：</strong>可解释的代码改动、运行说明、验证结果，以及一页数据流说明。</p>
+<p><strong>建议时长：</strong>2h：关闭答案补写循环 0.75h；修改字段约束或新增工具 0.5h；重跑验证并解释 0.5h；整理运行说明 0.25h。</p>
+</div></article>
+</section>
+
+<section class="card" id="resources"><h2>
+<span class="section-num">04</span>资料与方法</h2>
+<p>本周只围绕一个最小 Agent 使用资料。教材建立结构，官方文档确认接口，主要时间用于编码、Debug 和验证。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="表格 3，窄屏可横向滚动"><table class="task-table">
+<thead><tr>
+<th scope="col">资料</th>
+<th scope="col">具体阅读范围</th>
+<th scope="col">怎么用</th>
+</tr></thead>
+<tbody>
+<tr id="r-hello">
+<td><a href="https://github.com/datawhalechina/hello-agents/blob/main/docs/chapter4/%E7%AC%AC%E5%9B%9B%E7%AB%A0%20%E6%99%BA%E8%83%BD%E4%BD%93%E7%BB%8F%E5%85%B8%E8%8C%83%E5%BC%8F%E6%9E%84%E5%BB%BA.md">Hello-Agents 第四章</a></td>
+<td>4.1 基础封装；4.2.1 流程；4.2.2 工具；4.2.3 循环；4.2.4 调试</td>
+<td>主教材。4.1 按已有环境略读，4.2 重点；4.3、4.4 本周不展开。</td>
+</tr>
+<tr id="r-tools">
+<td><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview">官方工具调用流程</a></td>
+<td>自定义工具的完整请求、执行和回传</td>
+<td>以 Claude 为接口示例，区分模型决策与程序执行；实际项目沿用已有供应商。</td>
+</tr>
+<tr id="r-schema">
+<td><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools">官方工具定义</a></td>
+<td>名称、描述、输入 Schema</td>
+<td>核对所用 API 的具体字段，改成自己的两个工具。</td>
+</tr>
+<tr id="r-handle">
+<td><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls">官方调用处理</a></td>
+<td>读取调用、结果关联、回传和错误</td>
+<td>有具体问题时查阅；不要混用不同供应商的消息格式。</td>
+</tr>
+<tr id="r-pydantic">
+<td><a href="https://pydantic.dev/docs/validation/latest/concepts/models/">Pydantic Models</a></td>
+<td>
+<code>BaseModel</code>、<code>model_validate</code>、<code>ValidationError</code>
+</td>
+<td>复用 W05 基础，只补工具参数校验所需内容。</td>
+</tr>
+</tbody>
+</table></div>
+<p class="muted">资料章节与链接于 2026-09-19 核对。未添加无法充分核实的短视频；沿用现有模型 API，实际字段与支持范围以所用版本的官方文档为准。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="表格 4，窄屏可横向滚动"><table class="task-table">
+<thead><tr>
+<th scope="col">本周任务</th>
+<th scope="col">主导方式</th>
+<th scope="col">固定资料怎么用</th>
+<th scope="col">AI 怎么用</th>
+<th scope="col">必须动手做什么</th>
+<th scope="col">何时算学完</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>工具与参数</td>
+<td>官方文档＋实验</td>
+<td>查字段、约束、校验</td>
+<td>解释并给骨架</td>
+<td>两个函数及非法参数验证</td>
+<td>能定位校验边界</td>
+</tr>
+<tr>
+<td>完整往返</td>
+<td>示例＋独立修改</td>
+<td>跟一次协议数据流</td>
+<td>查数据丢失位置</td>
+<td>请求、执行、回传、回答</td>
+<td>能证明工具实际执行</td>
+</tr>
+<tr>
+<td>ReAct / Loop</td>
+<td>教材＋自己编码</td>
+<td>读 4.2 的循环</td>
+<td>逐级提示</td>
+<td>循环、上下文、终止判断</td>
+<td>从骨架独立补完</td>
+</tr>
+<tr>
+<td>失败处理</td>
+<td>实验主导</td>
+<td>按错误查页面</td>
+<td>检查边界遗漏</td>
+<td>固定模拟响应和异常</td>
+<td>每种失败都得到明确状态</td>
+</tr>
+<tr>
+<td>独立验收</td>
+<td>闭卷操作</td>
+<td>自己的代码</td>
+<td>提问与最终检查</td>
+<td>改 Schema、新增工具、复述</td>
+<td>能修改并解释影响</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+
+<section class="card" id="time"><h2>
+<span class="section-num">05</span>时间安排</h2>
+<div class="two-col">
+<div class="mini">
+<h3>周六 · 9 月 26 日 · 8h</h3>
+<p>工具定义与参数校验 <strong>3h</strong></p>
+<p>完整调用与直接回答 <strong>3h</strong></p>
+<p>ReAct 流程与循环骨架 <strong>2h</strong></p>
+</div>
+<div class="mini">
+<h3>周日 · 9 月 27 日 · 8h</h3>
+<p>补完 Agent Loop 与终止控制 <strong>3h</strong></p>
+<p>失败处理和边界验证 <strong>3h</strong></p>
+<p>独立修改、闭卷验收、说明 <strong>2h</strong></p>
+</div>
+</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="表格 5，窄屏可横向滚动"><table class="task-table">
+<tr>
+<th scope="col">任务</th>
+<th scope="col">时间拆分（均已计入 16h）</th>
+</tr>
+<tr>
+<td><a href="#task-1">工具定义与参数校验</a></td>
+<td>3h：复跑 W05 校验 0.5h；工具 Schema 与接口阅读 0.75h；实现两个函数和参数校验 1.25h；反例检查 0.5h。</td>
+</tr>
+<tr>
+<td><a href="#task-2">一次完整工具调用</a></td>
+<td>3h：官方最小协议示例 0.75h；独立接入请求、执行和回传 1.5h；直接回答与调用记录检查 0.75h。</td>
+</tr>
+<tr>
+<td><a href="#task-3">ReAct 与 Agent Loop</a></td>
+<td>5h：Hello-Agents 与控制流讲解 1.25h；手写循环和上下文更新 2.5h；步数上限与停止实验 0.75h；闭卷画图 0.5h。</td>
+</tr>
+<tr>
+<td><a href="#task-4">失败与边界处理</a></td>
+<td>3h：按需查错误处理 0.5h；构造异常响应与失败样例 1.5h；Debug 与状态核对 1h。</td>
+</tr>
+<tr>
+<td><a href="#task-5">独立修改与闭卷验收</a></td>
+<td>2h：关闭答案补写循环 0.75h；修改字段约束或新增工具 0.5h；重跑验证并解释 0.5h；整理运行说明 0.25h。</td>
+</tr>
+</table></div>
+<p>建议资料输入约 4–5h，编码、实验、Debug 与验收约 11–12h。周一至周四不安排刚性任务；周五 0–6h 是弹性容量，不计入 P0 保底。假期按实际空闲日另算，优先补阻塞性 P0。</p>
+<div class="callout warn">
+<strong>排期边界：</strong>W06 从 9 月 21 日开始，标准学习时段为 9 月 26–27 日各 8h。周五 0–6h 仅作弹性；9 月 19–20 日仍属于 W05。若遇假期，只按实际可用空闲日 × 8h 另算，不自动加满；P0 受阻时先取消拓展、保留 Debug 与验收。</div>
+<div class="action">
+<strong>第一步：</strong>复跑 W05 的一次成功校验和一次 <code>ValidationError</code>，随后独立写出两个普通 Python 工具函数。完成这一步，再接模型的工具调用协议。</div>
+</section>
+
+<section class="card" id="acceptance"><h2>
+<span class="section-num">06</span>产出验收</h2>
+<p>文件组织可沿用现有仓库。下面是建议职责拆分，不要求为了目录形式重构已有代码：</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="表格 6，窄屏可横向滚动"><table class="task-table">
+<thead><tr>
+<th scope="col">建议产出</th>
+<th scope="col">包含什么</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+<code>tools.py</code> / <code>schemas.py</code>
+</td>
+<td>至少两个工具、参数结构与校验。</td>
+</tr>
+<tr>
+<td><code>agent.py</code></td>
+<td>模型调用、工具派发、结果回传、循环和终止控制。</td>
+</tr>
+<tr>
+<td>
+<code>test_agent.py</code> 或最小验证脚本</td>
+<td>正常与异常路径；需要时用固定模拟响应稳定触发边界。</td>
+</tr>
+<tr>
+<td>
+<code>README.md</code> 或本周记录</td>
+<td>运行方法、数据流、验证结果、已知限制，以及自己的独立修改。</td>
+</tr>
+</tbody>
+</table></div>
+<p>正常路径至少用真实 API 跑通一次；异常路径可以模拟。下方勾选仅用于当前页面自查，不代表已核验仓库，也不自动更新长期计划。</p>
+<ul class="checks">
+<li><label><input type="checkbox"><span><strong>正常工具调用</strong><small>函数真实执行，模型回答使用返回结果。</small></span></label></li>
+<li><label><input type="checkbox"><span><strong>两个工具之间的基本选择</strong><small>查询任务和计算时长进入对应工具；检查实际调用记录。</small></span></label></li>
+<li><label><input type="checkbox"><span><strong>无需工具时直接回答</strong><small>普通问候可以结束，工具执行次数为 0。</small></span></label></li>
+<li><label><input type="checkbox"><span><strong>参数错误</strong><small>缺字段或不合法类型被识别，非法参数不进入函数执行。</small></span></label></li>
+<li><label><input type="checkbox"><span><strong>工具执行失败</strong><small>捕获预期失败，返回清楚的错误信息，答案不伪装成功。</small></span></label></li>
+<li><label><input type="checkbox"><span><strong>最大步数终止</strong><small>使用持续请求工具的模拟响应，确认按既定计数规则停止，并记录未完成。</small></span></label></li>
+<li><label><input type="checkbox"><span><strong>闭卷解释与独立修改</strong><small>画出数据流；解释结果为什么回传、步数为什么受限、Workflow 与 Agent 的边界；独立改 Schema 或增加工具。</small></span></label></li>
+</ul>
+<div class="notice"><p><strong>协作方式：</strong>你先写核心代码、运行并尝试 Debug；ChatGPT 负责讲解、骨架和逐级提示；Codex 在你尝试后辅助定位问题、检查代码与测试。最后关闭答案，重写或修改核心部分。</p></div>
+</section>
+
+<nav class="week-pager" aria-label="相邻执行周"><a href="2026-09-14-w05.html"><small>上一周</small><strong>← W05 · Structured Output + Context + Agent 全景</strong></a><a href="../../index.html"><small>学习归档</small><strong>查看全部周报 →</strong></a></nav><section class="card" id="status"><h2>
+<span class="section-num">07</span>整体进度</h2>
+<div class="callout">
+<strong>默认执行假设：</strong>按 W01–W05 核心任务已完成排程，W06 尚未计入；这只是排期假设，不表示能力已经通过验收。实际偏差只优先补阻塞后续的 P0。</div>
+    <div class="two-col">
+<div class="mini">
+<h3>本周开始前：16.1%</h3>
+<p>5 / 31 个执行周</p>
+<progress max="31" value="5" aria-label="本周开始前路线覆盖"></progress>
+</div>
+<div class="mini">
+<h3>本周完成后目标：19.4%</h3>
+<p>6 / 31 个执行周</p>
+<progress max="31" value="6" aria-label="本周完成后目标覆盖"></progress>
+</div>
+</div>
+    <p>覆盖率＝执行周数 ÷ 31；不代表实际能力评分、工时占比或阶段门已经通过。</p>
+    <div class="table-wrap" role="region" tabindex="0" aria-label="表格 7，窄屏可横向滚动">
+<table class="task-table">
+<tr>
+<th scope="col">路线阶段</th>
+<th scope="col">最终能力 / 证据</th>
+<th scope="col">本周前</th>
+<th scope="col">本周后目标</th>
+</tr>
+<tr>
+<td>W01–W03｜基础启动</td>
+<td>Python / Git 最低可用闭环</td>
+<td>3/3</td>
+<td>3/3</td>
+</tr>
+<tr>
+<td>W04–W07｜LLM / Agent 前置能力</td>
+<td>LLM API、结构化输出、Tool Calling、Agent Loop、FastAPI / RAG 全景</td>
+<td>2/4</td>
+<td>3/4</td>
+</tr>
+<tr>
+<td>W08–W14｜RAG 工程</td>
+<td>文档处理、检索、固定评测、API、测试与部署</td>
+<td>0/7</td>
+<td>0/7</td>
+</tr>
+<tr>
+<td>W15–W20｜Agent 工程深化</td>
+<td>State、Memory、HITL、Trace / Recovery 与 Agent 评测</td>
+<td>0/6</td>
+<td>0/6</td>
+</tr>
+<tr>
+<td>W21–W26｜Evaluation / Pipeline</td>
+<td>Golden Dataset、批量运行、校验、回归与报告</td>
+<td>0/6</td>
+<td>0/6</td>
+</tr>
+<tr>
+<td>W27–W31｜求职准备</td>
+<td>作品集、简历、技术面试与反馈闭环</td>
+<td>0/5</td>
+<td>0/5</td>
+</tr>
+</table>
+    </div>
+<p><strong>本周能力变化：</strong>从“能调用模型并校验输出”，推进到“模型请求工具，程序控制执行、反馈与终止”。通过本周验收后，W07 进入 FastAPI 与 RAG 全景。</p>
+    <p><strong>阶段门：</strong>W07 核对 LLM API、Structured Output、Agent Loop、FastAPI 与 RAG 全景；W14 检查 RAG 项目及固定评测；W20 检查 Agent 状态、恢复与评测；W26 检查 Evaluation / Pipeline 的版本、回归与报告；求职前检查可公开复现的作品。通过与否都需要代码、运行记录和解释证据。</p>
+    <p><strong>未完成时：</strong>优先补齐工具往返、参数校验、循环与终止控制。P1 可滚动，P2 与重复资料可取消；月底结合实际容量调整，不因单周波动重写整个大纲。</p></section><footer class="footer">依据：Master Plan V5.8 · Weekly Interpretation Spec V2.1 · 资料核对：2026-09-19<p class="design-credit">页面更新：2026-09-19 · <a href="../../index.html">返回学习归档</a> · <a href="#overview">回到顶部 ↑</a></p></footer></main>
+</body>
+</html>
+
