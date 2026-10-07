@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>W08 学习教程｜Document Pipeline + Chunk</title>
+<link rel="stylesheet" href="../../assets/style.css?v=weekly-20260919">
+<meta name="description" content="W08 可直接学习教程：文档读取、清洗、metadata、chunk size、overlap、数据校验与可重复 Pipeline。2026-10-05—10-11，16 小时。">
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a>
+<nav class="page-nav" aria-label="页面章节导航"><div class="page-nav-inner">
+<a class="brand" href="../../index.html">AI 学习<span> / WEEKLY</span></a><div class="nav-links">
+<a href="#summary">本周摘要</a><a href="#priority">任务边界</a><a href="#tutorial">核心教程</a><a href="#resources">资料方法</a><a href="#time">时间安排</a><a href="#acceptance">练习验收</a><a href="#status">整体进度</a>
+</div></div></nav>
+<main class="container" id="main-content">
+<nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="w01.html">W01</a><a href="w02.html">W02</a><a href="w03.html">W03</a><a href="2026-09-07-w04.html">W04</a><a href="2026-09-14-w05.html">W05</a><a href="2026-09-21-w06.html">W06</a><a href="2026-09-28-w07.html">W07</a><a href="2026-10-05-w08.html" aria-current="page">W08</a></nav>
+
+<section class="hero" id="overview"><div class="eyebrow">WEEK 08 · 可直接学习教程</div>
+<h1>Document Pipeline<span class="title-plus"> + </span>Chunk</h1>
+<p class="lead">正式进入 RAG 工程阶段：先把原始文件稳定地变成可追踪、可校验、可重复生成的文档块，再谈 Embedding 和检索。</p>
+<div class="hero-meta"><span class="chip">本周执行版</span><span class="chip">2026.10.05—10.11</span><span class="chip">标准容量：16 小时</span><span class="chip">Master Plan V5.8</span></div>
+<div class="intro"><div class="hero-note"><small>本期两行概要</small>
+<p>用纯 Python 读取 TXT / Markdown，完成保守清洗与 metadata 设计，建立可重复运行的 Document Pipeline。</p>
+<p>实现固定窗口与段落优先两种 Chunk 策略，对比 chunk size / overlap，并用校验与测试留下工程证据。</p>
+</div><div class="calendar"><small>本周交付</small>
+<div><strong>01</strong><span>可重复运行的文档处理 Pipeline</span></div>
+<div><strong>02</strong><span>两种 Chunk 策略对照记录</span></div>
+<div><strong>03</strong><span>校验、测试与闭卷重写证据</span></div>
+</div></div>
+<p class="muted source-note">依据：Master Plan V5.8 的 W08 默认切片。只使用公开、自写或合成文本；本周不接 Embedding、向量库、PDF/OCR 或 RAG 框架。</p></section>
+
+<section class="card" id="summary"><h2><span class="section-num">01</span>本周结论摘要</h2>
+<div class="kpis"><div class="kpi"><span>执行周</span><b>W08</b><span>10 月 5—11 日</span></div><div class="kpi"><span>标准容量</span><b>16h</b><span>周末 8h + 8h</span></div><div class="kpi"><span>阶段位置</span><b>RAG 1/7</b><span>工程阶段起点</span></div><div class="kpi"><span>核心证据</span><b>2 策略</b><span>固定窗口 + 段落优先</span></div></div>
+<div class="callout ok"><strong>一句话目标：</strong>给定同一批文本文件，Pipeline 能按固定顺序读取、清洗、附加来源信息、切块并导出；重复运行结果稳定，且你能解释切块过大、过小和 overlap 不合理分别会造成什么问题。</div>
+<p>W08 的关键不是“调用一个 splitter”，而是理解数据从文件进入 RAG 前发生了什么。只要输入、规则或顺序不稳定，W09 的 Retriever baseline 和 W12 的 Evaluation 都无法可靠比较。</p>
+</section>
+
+<section class="card" id="priority"><h2><span class="section-num">02</span>任务优先级、掌握程度与边界</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W08 任务表"><table class="task-table"><thead><tr><th>优先级</th><th>任务</th><th>掌握程度</th><th>时长</th></tr></thead><tbody>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-1">Pipeline 契约与目录</a></td><td>L2：说清输入、输出、失败条件和每层职责，建立最小文件结构。</td><td>2h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-2">读取、清洗与 metadata</a></td><td>L2：稳定读取 TXT / MD，保留段落语义，并让每个 Document 可追踪到来源。</td><td>3.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-3">固定窗口 Chunk + overlap</a></td><td>L2：独立实现切块，校验参数，并解释 size / overlap 的取舍。</td><td>3.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-4">段落优先策略与对照实验</a></td><td>L2：实现第二种策略，用固定样本比较块数、长度和语义完整性。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-5">校验、稳定输出与测试</a></td><td>L2：拒绝空文档/非法参数；排序输入；验证重复运行结果一致。</td><td>2h</td></tr>
+<tr><td><span class="tag p0">综合验收</span></td><td><a href="#lesson-6">独立整合与闭卷重写</a></td><td>从骨架完成 Pipeline，解释数据流并记录失败样本。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p1">P1</span></td><td>JSONL 导出、稳定 chunk_id、最小 pytest</td><td>融入 P0；P0 阻塞时优先转为 Debug，不追加总工时。</td><td>融入</td></tr>
+<tr><td><span class="tag p2">P2 / 不做</span></td><td>PDF/OCR、网页爬虫、表格解析、Embedding、向量库、LangChain Loader、复杂语义切块</td><td>本周明确跳过；这些会掩盖文档处理基本功或提前进入后续周。</td><td>0h</td></tr>
+<tr><td colspan="3"><strong>标准容量合计（含综合验收）</strong></td><td><strong>16h</strong></td></tr>
+</tbody></table></div>
+<p class="muted">L2 的判断标准不是“看过代码”，而是能在新文本上独立修改规则、观察输出、解释失败并重跑。</p>
+</section>
+
+<section class="card" id="tutorial"><h2><span class="section-num">03</span>核心教程正文</h2>
+<nav class="task-jumps" aria-label="教程快捷跳转"><a href="#lesson-1">1. Pipeline 契约</a><a href="#lesson-2">2. 读取与清洗</a><a href="#lesson-3">3. 固定窗口</a><a href="#lesson-4">4. 段落策略</a><a href="#lesson-5">5. 校验与测试</a><a href="#lesson-6">6. 综合练习</a></nav>
+
+<article class="task" id="lesson-1"><div class="task-head"><h3>一、Document Pipeline：先定义数据契约</h3><span class="duration">2 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">AI 主讲 + 实验主导</span></div>
+<p><strong>Document Pipeline（文档处理流水线）</strong>是把原始文件转换成统一 Document，再转换成 Chunk 的可重复过程。它位于 RAG 最前端：本周输出会在 W09 被 Embedding 和 Retriever 使用，在 W12 被固定测试集评估。</p>
+<div class="flow"><span class="node">原始文件</span><span class="arrow">→</span><span class="node">读取</span><span class="arrow">→</span><span class="node">清洗</span><span class="arrow">→</span><span class="node">Document + metadata</span><span class="arrow">→</span><span class="node">Chunk</span><span class="arrow">→</span><span class="node">校验 / JSONL</span></div>
+<p><strong>最小目录：</strong><code>data/raw/</code> 保存公开或合成输入，<code>src/document_pipeline.py</code> 放可复用逻辑，<code>tests/test_document_pipeline.py</code> 放回归测试，<code>artifacts/chunks.jsonl</code> 放生成结果。原始输入不在处理中被覆盖。</p>
+<pre><code>from pydantic import BaseModel, Field
+
+class Document(BaseModel):
+    text: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    metadata: dict[str, str | int] = Field(default_factory=dict)
+
+class Chunk(BaseModel):
+    chunk_id: str
+    text: str = Field(min_length=1)
+    source: str
+    start: int
+    end: int
+    metadata: dict[str, str | int] = Field(default_factory=dict)</code></pre>
+<div class="task-guide"><h4>先弄懂再写</h4><p><strong>text</strong> 是后续被检索的内容；<strong>source</strong> 回答“这段来自哪里”；<strong>metadata</strong> 保存标题、类型、时间等过滤或解释信息；<strong>start/end</strong> 让 Chunk 可以映射回原文。</p><p><strong>停止点：</strong>能画出数据流，并说出每个字段为何存在；不要在这里设计完整数据库模型。</p></div>
+</article>
+
+<article class="task" id="lesson-2"><div class="task-head"><h3>二、读取、保守清洗与 metadata</h3><span class="duration">3.5 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">官方文档主讲 + 实验</span></div>
+<p><strong>Document Loader（文档读取器）</strong>负责把不同文件变成统一字符串；<strong>Cleaning（清洗）</strong>只移除确定是噪声的内容；<strong>Metadata（元数据）</strong>保存来源和结构信息。清洗的原则是可解释、可回退，不要为了“干净”破坏标题和段落。</p>
+<pre><code>from pathlib import Path
+import re
+
+ALLOWED_SUFFIXES = {".txt", ".md"}
+
+def normalize_text(text: str) -&gt; str:
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n")]
+    cleaned = "\n".join(lines)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+    if not cleaned:
+        raise ValueError("document is empty after cleaning")
+    return cleaned
+
+def load_documents(root: Path) -&gt; list[Document]:
+    paths = sorted(p for p in root.rglob("*") if p.suffix.lower() in ALLOWED_SUFFIXES)
+    documents: list[Document] = []
+    for path in paths:
+        raw = path.read_text(encoding="utf-8")
+        documents.append(Document(
+            text=normalize_text(raw),
+            source=path.as_posix(),
+            metadata={"suffix": path.suffix.lower(), "filename": path.name},
+        ))
+    return documents</code></pre>
+<h4>常见错误：不指定编码</h4>
+<pre><code># 错误：依赖操作系统默认编码
+raw = path.read_text()</code></pre>
+<p>同一文件可能在不同机器产生 <code>UnicodeDecodeError</code> 或不同结果。正确做法是显式使用 <code>encoding="utf-8"</code>；真实数据若不是 UTF-8，应记录并转换，而不是用 <code>errors="ignore"</code> 静默丢字符。</p>
+<h4>常见错误：把所有空白压成一行</h4>
+<pre><code># 错误：标题、列表和段落边界全部消失
+cleaned = " ".join(raw.split())</code></pre>
+<p>正确做法是只合并行内连续空格，并把三个以上换行压成两个，保留段落作为后续切块边界。</p>
+<div class="task-guide"><h4>练习骨架</h4><p>补充 <code>.md</code> 与 <code>.txt</code> 各两份合成文本，包含 Windows 换行、多余空格、空文件和中文。你先实现 <code>normalize_text</code>；卡住时只让 AI 给一个 Hint，不直接索取完整答案。</p><p><strong>边界测试：</strong>空目录、空文件、仅空白文件、UTF-8 中文、重复文件名位于不同目录。</p></div>
+</article>
+
+<article class="task" id="lesson-3"><div class="task-head"><h3>三、Chunk size 与 overlap：实现固定窗口</h3><span class="duration">3.5 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">实验主导</span></div>
+<p><strong>Chunk（文本块）</strong>是检索的最小单元；<strong>chunk size（块大小）</strong>决定每块携带多少上下文；<strong>overlap（重叠）</strong>让跨边界的信息在相邻块重复出现。块太小会丢上下文并制造大量碎片，块太大会混入无关内容并增加后续 Token 成本；overlap 太大则重复存储、重复召回。</p>
+<pre><code>from hashlib import sha256
+
+def chunk_fixed(document: Document, chunk_size: int = 500, overlap: int = 80) -&gt; list[Chunk]:
+    if chunk_size &lt;= 0:
+        raise ValueError("chunk_size must be positive")
+    if overlap &lt; 0 or overlap &gt;= chunk_size:
+        raise ValueError("overlap must satisfy 0 &lt;= overlap &lt; chunk_size")
+
+    chunks: list[Chunk] = []
+    start = 0
+    while start &lt; len(document.text):
+        end = min(start + chunk_size, len(document.text))
+        piece = document.text[start:end].strip()
+        if piece:
+            raw_id = f"{document.source}|{start}|{end}|{piece}"
+            chunks.append(Chunk(
+                chunk_id=sha256(raw_id.encode("utf-8")).hexdigest()[:12],
+                text=piece, source=document.source, start=start, end=end,
+                metadata={**document.metadata, "strategy": "fixed"},
+            ))
+        if end == len(document.text):
+            break
+        start = end - overlap
+    return chunks</code></pre>
+<h4>危险错误：overlap 大于或等于 chunk size</h4>
+<pre><code># 错误参数：start 无法向前推进，可能形成死循环
+chunk_fixed(document, chunk_size=200, overlap=200)</code></pre>
+<p>因此必须在进入循环前校验参数。不要等程序卡死后才处理。</p>
+<div class="task-guide"><h4>对照实验</h4><p>固定同一篇 1500–3000 字文本，分别运行 <code>(300, 0)</code>、<code>(300, 60)</code>、<code>(600, 80)</code>。记录块数、最短/最长块、重复字符比例，并人工检查两个跨段落问题是否能在单块中回答。</p><p><strong>停止点：</strong>能解释参数变化，不追求“万能最佳值”。W12 会用固定评测集再比较。</p></div>
+</article>
+
+<article class="task" id="lesson-4"><div class="task-head"><h3>四、段落优先切块：第二种策略</h3><span class="duration">2.5 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">用户实现 + AI 检查</span></div>
+<p>固定窗口简单、稳定，但会在任意字符处切断语义。第二种策略先按空行获得段落，再把多个短段落装入目标大小；只有单个段落过长时才回退到固定窗口。这样能保留标题、列表和自然段边界。</p>
+<pre><code>def chunk_by_paragraph(document: Document, target_size: int = 500) -&gt; list[str]:
+    paragraphs = [p.strip() for p in document.text.split("\n\n") if p.strip()]
+    result: list[str] = []
+    current: list[str] = []
+    current_len = 0
+
+    for paragraph in paragraphs:
+        extra = len(paragraph) + (2 if current else 0)
+        if current and current_len + extra &gt; target_size:
+            result.append("\n\n".join(current))
+            current, current_len = [], 0
+        current.append(paragraph)
+        current_len += len(paragraph) + (2 if len(current) &gt; 1 else 0)
+
+    if current:
+        result.append("\n\n".join(current))
+    return result</code></pre>
+<div class="callout warn"><strong>本例故意保留一个待处理边界：</strong>单段长度大于 <code>target_size</code> 时，上面代码仍会产生超长块。你的练习是检测这个条件，并调用固定窗口函数拆分该段；不要直接复制框架 splitter 掩盖逻辑。</div>
+<div class="task-guide"><h4>比较维度</h4><p>对同一文档比较固定窗口与段落优先：块数、长度分布、超长块数量、标题/列表是否完整、相邻块重复量。写下“这个样本更适合哪种策略以及为什么”，不能只写“效果更好”。</p></div>
+</article>
+
+<article class="task" id="lesson-5"><div class="task-head"><h3>五、数据校验、稳定输出与可重复测试</h3><span class="duration">2 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">官方文档 + Debug</span></div>
+<p><strong>Reproducibility（可重复性）</strong>意味着相同输入和参数得到相同顺序、chunk_id 与内容。至少控制：文件排序、显式编码、确定性清洗、固定参数、稳定 ID、明确失败。</p>
+<pre><code>import json
+from pathlib import Path
+
+def save_jsonl(chunks: list[Chunk], output: Path) -&gt; None:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    lines = [json.dumps(c.model_dump(), ensure_ascii=False, sort_keys=True) for c in chunks]
+    output.write_text("\n".join(lines) + "\n", encoding="utf-8")</code></pre>
+<h4>测试不是只看“能运行”</h4>
+<pre><code>def test_chunk_fixed_is_stable():
+    doc = Document(text="甲" * 900, source="sample.txt")
+    first = chunk_fixed(doc, chunk_size=300, overlap=60)
+    second = chunk_fixed(doc, chunk_size=300, overlap=60)
+    assert [c.model_dump() for c in first] == [c.model_dump() for c in second]
+    assert all(c.text for c in first)
+    assert all(0 &lt;= c.start &lt; c.end &lt;= len(doc.text) for c in first)
+
+def test_rejects_invalid_overlap():
+    doc = Document(text="有效文本", source="sample.txt")
+    try:
+        chunk_fixed(doc, chunk_size=100, overlap=100)
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert "overlap" in str(exc)</code></pre>
+<p>输入路径必须 <code>sorted</code>；否则文件系统返回顺序不保证稳定。JSONL 使用 <code>ensure_ascii=False</code> 便于检查中文，<code>sort_keys=True</code> 便于回归比较。</p>
+<div class="task-guide"><h4>必须验证</h4><p>重复运行两次后比较输出文件哈希；删除一个输入、加入空文件、修改 chunk_size，再确认失败或变化符合预期。不要使用宽泛的 <code>except Exception: pass</code> 把坏数据吞掉。</p></div>
+</article>
+
+<article class="task" id="lesson-6"><div class="task-head"><h3>六、综合练习与闭卷重写</h3><span class="duration">2.5 小时</span></div><div class="task-meta"><span class="pill p0">P0 验收</span><span class="pill">用户主导</span></div>
+<p><strong>练习骨架：</strong>准备 4–6 份公开或合成 TXT / Markdown，至少包含标题、列表、长段落、空白和中文。实现 <code>load_documents</code>、<code>normalize_text</code>、<code>chunk_fixed</code>、<code>chunk_by_paragraph</code>、<code>save_jsonl</code>，生成一份策略对照表。</p>
+<pre><code>def run_pipeline(input_dir: Path, output_file: Path, strategy: str) -&gt; list[Chunk]:
+    documents = load_documents(input_dir)
+    # TODO 1：根据 strategy 选择切块函数
+    # TODO 2：汇总所有 Chunk，并保留来源 metadata
+    # TODO 3：校验 chunk_id 唯一、text 非空、start/end 合法
+    # TODO 4：保存 JSONL，并返回 chunks
+    raise NotImplementedError</code></pre>
+<p><strong>提示阶梯：</strong>先独立写 30–45 分钟；若卡住，让 AI 只检查函数输入输出；再卡住才请求伪代码；最后才看局部示例。完成后让 AI 检查边界和测试，但由你决定修改。</p>
+<p><strong>闭卷要求：</strong>关闭教程，从空文件重写一个简化版读取—清洗—切块流程，并口头解释：为什么要 metadata、为什么 overlap 必须小于 chunk_size、为什么排序影响可重复性、为什么 Chunk 策略要用固定样本比较。</p>
+</article>
+</section>
+
+<section class="card" id="resources"><h2><span class="section-num">04</span>资料与学习方法</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="资料和用法"><table class="task-table"><thead><tr><th>资料</th><th>具体位置</th><th>本周怎么用</th><th>主导方式</th></tr></thead><tbody>
+<tr><td><a href="https://docs.python.org/3/library/pathlib.html">Python <code>pathlib</code> 官方文档</a></td><td>Reading and writing files；Reading directories；<code>read_text</code> / <code>rglob</code></td><td>查清路径、编码和遍历行为；只读本周用到的 API。</td><td>官方文档主讲</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/json.html">Python <code>json</code> 官方文档</a></td><td>Basic Usage；<code>dumps</code>；Exceptions</td><td>理解 JSONL 输出、中文与稳定键顺序；不通读全部 Encoder。</td><td>官方文档主讲</td></tr>
+<tr><td><a href="https://docs.pydantic.dev/latest/concepts/models/">Pydantic Models 官方文档</a></td><td>Basic model usage；Data conversion；Error handling</td><td>复用 W05 的 Schema 能力校验 Document / Chunk，不扩展高级 validator。</td><td>官方文档主讲</td></tr>
+<tr><td><a href="https://docs.langchain.com/oss/python/integrations/splitters">LangChain Text Splitters 概览</a></td><td>Text splitter 的目的与常见策略</td><td>只用于对照行业接口；先完成纯 Python 实现，不安装框架。</td><td>辅助资料</td></tr>
+<tr><td>All-in-RAG</td><td>文档处理、Chunk 入门对应部分</td><td>建立 RAG 上下文；以原理和实验为准，不抄完整工程。</td><td>原课程主讲</td></tr>
+<tr><td>ChatGPT</td><td>概念解释、Hint、失败样本分析、闭卷提问</td><td>先解释再示例；练习阶段不给完整答案；完成后检查边界。</td><td>AI 主讲</td></tr>
+</tbody></table></div>
+<p class="muted">资料输入控制在约 35–40%；至少 60% 时间用于实现、实验、Debug、测试和闭卷重写。</p>
+</section>
+
+<section class="card" id="time"><h2><span class="section-num">05</span>执行顺序与 16 小时时间分配</h2>
+<div class="two-col"><div class="mini"><h3>第一学习日 · 8h</h3><ol><li>Pipeline 契约与目录：2h</li><li>读取、清洗、metadata：3.5h</li><li>固定窗口 Chunk：2.5h（先跑通）</li></ol></div><div class="mini"><h3>第二学习日 · 8h</h3><ol><li>固定窗口实验收尾：1h</li><li>段落优先策略与对照：2.5h</li><li>校验、稳定输出与测试：2h</li><li>综合练习、Debug、闭卷重写：2.5h</li></ol></div></div>
+<div class="callout"><strong>周五 4–6h 若可用：</strong>只用于准备合成文本、复习 W07 的 RAG 全景或提前读官方文档；不从周末 16h 的 P0 中扣除，也不提前进入 W09 Embedding。</div>
+</section>
+
+<section class="card" id="acceptance"><h2><span class="section-num">06</span>练习、验收与分工</h2>
+<h3>产出清单</h3><ul class="checks"><li><label><input type="checkbox"><span><strong>可重复运行的 Document Pipeline</strong><small>输入目录到 JSONL；不覆盖原始文件；相同输入两次结果一致。</small></span></label></li><li><label><input type="checkbox"><span><strong>两种 Chunk 策略</strong><small>固定窗口与段落优先；同一数据集、同一记录模板。</small></span></label></li><li><label><input type="checkbox"><span><strong>数据校验与失败样本</strong><small>空文档、非法 overlap、超长段落、不同换行至少覆盖三项。</small></span></label></li><li><label><input type="checkbox"><span><strong>最小自动测试</strong><small>稳定性、边界、非法参数与 metadata 追踪。</small></span></label></li><li><label><input type="checkbox"><span><strong>实验记录</strong><small>参数、块数、长度分布、人工观察和结论都有记录。</small></span></label></li></ul>
+<h3>闭卷验收题</h3><ol><li>Document 和 Chunk 的区别是什么？metadata 为什么不能等到向量入库时再随便补？</li><li>chunk size 太大、太小分别如何影响召回、上下文和成本？</li><li>overlap 解决什么问题，为什么不能越大越好？</li><li>如何证明 Pipeline 可重复，而不是“这次跑通了”？</li><li>为什么本周先不使用 LangChain Loader 和 Splitter？什么时候才值得替换？</li></ol>
+<div class="notice"><p><strong>你：</strong>完成核心实现、第一次 Debug、实验记录与闭卷重写。<strong>ChatGPT：</strong>提供中文解释、分级 Hint、验收提问与错误原因分析。<strong>Codex：</strong>在你尝试后检查目录、类型、测试、异常边界和可重复性，并提出小范围修改。AI 生成代码必须由你运行、修改和解释。</p></div>
+</section>
+
+<nav class="week-pager" aria-label="相邻执行周"><a href="2026-09-28-w07.html"><small>上一周</small><strong>← W07 · FastAPI + RAG 全景</strong></a><a href="../../index.html"><small>学习归档</small><strong>查看全部周报 →</strong></a></nav>
+
+<section class="card" id="status"><h2><span class="section-num">07</span>整体 Agent 开发准备进度</h2>
+<div class="callout"><strong>默认执行假设：</strong>按 W01–W07 核心任务已完成排程，W08 尚未计入。这是执行安排，不自动证明 Gate 1 已通过；若前置 P0 阻塞，只补会直接影响 Document Pipeline 的部分。</div>
+<div class="two-col"><div class="mini"><h3>本周开始前：22.6%</h3><p>7 / 31 个执行周</p><progress max="31" value="7" aria-label="本周开始前路线覆盖"></progress></div><div class="mini"><h3>本周完成后目标：25.8%</h3><p>8 / 31 个执行周</p><progress max="31" value="8" aria-label="本周完成后目标覆盖"></progress></div></div>
+<p>覆盖率＝执行周数 ÷ 31；它不是能力评分、工时占比或验收证据。W08 完成仍需以代码、测试、实验记录和闭卷解释判断。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="路线阶段进度"><table class="task-table"><tbody><tr><th>路线阶段</th><th>最终能力 / 证据</th><th>本周前</th><th>本周后目标</th></tr><tr><td>W01–W03｜基础启动</td><td>Python / Git 最低可用闭环</td><td>3/3</td><td>3/3</td></tr><tr><td>W04–W07｜前置能力</td><td>LLM API、Structured Output、Tool Calling、Agent Loop、FastAPI / RAG 全景</td><td>4/4</td><td>4/4</td></tr><tr><td>W08–W14｜RAG 工程</td><td>文档 Pipeline、检索、固定评测、API、测试、日志与部署</td><td>0/7</td><td>1/7</td></tr><tr><td>W15–W20｜Agent 深化</td><td>State、Memory、HITL、Trace / Recovery 与 Agent 评测</td><td>0/6</td><td>0/6</td></tr><tr><td>W21–W26｜Evaluation / Pipeline</td><td>Golden Dataset、批量运行、校验、回归与报告</td><td>0/6</td><td>0/6</td></tr><tr><td>W27–W31｜求职准备</td><td>作品集、简历、技术面试与反馈闭环</td><td>0/5</td><td>0/5</td></tr></tbody></table></div>
+<p><strong>本周能力变化：</strong>从“能解释 RAG 流程”推进到“能生成稳定、可追踪、可比较的 RAG 输入数据”。这为 W09 Retriever baseline 和后续 Evaluation 建立数据基础。</p>
+<p><strong>未完成时：</strong>优先保住读取—清洗—metadata—固定窗口—参数校验主链路；段落策略和 JSONL 美化可滚动，P2 全部取消，不机械重开旧周。</p>
+</section>
+
+<footer class="footer">依据：Master Plan V5.8 · W08 Document Pipeline + Chunk · 官方资料核对：2026-10-07<p class="design-credit">页面更新：2026-10-07 · <a href="../../index.html">返回学习归档</a> · <a href="#overview">回到顶部 ↑</a></p></footer>
+</main>
+</body>
+</html>
