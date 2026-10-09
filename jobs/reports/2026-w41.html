@@ -1,0 +1,61 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>W41 · Agent 评测平台化，Managed Agents 与工程型 FDE 增多｜AI 岗位 / 行情监控</title><link rel="stylesheet" href="../assets/style.css?v=20260926"><meta name="description" content="2026-10-09 中国社招 AI 应用、Agent、Python AI 后端、RAG、技术型评测、AI 数据 Pipeline 与工程型 PDE/FDE 统一监控报告"></head><body><a class="skip" href="#main">跳到正文</a><header class="top"><div class="top-inner"><a class="brand" href="../index.html">AI JOB RADAR / 岗位行情监控</a><nav><a href="#summary">结论</a><a href="#coverage">覆盖</a><a href="#jobs">重点岗位</a><a href="#skills">技能变化</a><a href="#community">社区面经</a><a href="#action">行动</a><a href="#method">口径</a></nav></div></header><main class="shell" id="main">
+<nav class="mini-links" aria-label="周报切换"><a href="../index.html">总览</a><a href="2026-w40.html">W40 · 2026-10-02</a><a href="2026-w41.html" aria-current="page">W41 · 2026-10-09</a></nav>
+<section class="hero"><div class="eyebrow">CURRENT SNAPSHOT / W41</div><h1>Agent 评测平台化，Managed Agents 与工程型 FDE 增多</h1><p class="lead">本周最强信号不是“更多聊天机器人岗位”，而是企业把 Agent 的运行、评测、回归、沙箱、轨迹归因和业务交付拆成独立工程职责。低年限入口仍少，后端基本功与可复现评测成为共同门槛。</p><div class="chips"><span class="chip">报告 / 检索日 2026-10-09</span><span class="chip">39 条初筛 · 34 条去重</span><span class="chip">近 3 个月优先</span><span class="chip">岗位 + 社区面经统一监控</span></div></section>
+<div class="notice"><strong>读数说明：</strong>39/34 是本次实际查看并记录的公开候选，不代表全市场职位数。企业官网、可信聚合详情、平台卡片和社区自述分层呈现；“本周搜不到”不等于下架，平台估薪不等于招聘方薪资。</div>
+
+<section class="card" id="summary"><h2>01 / 本期最重要的 7 个变化</h2><ol class="bullets">
+<li><strong>评测从方法变成平台：</strong>腾讯、钉钉千问办公、蚂蚁、网商银行、上海 AI 实验室的样本共同要求自动化 Pipeline、LLM-as-a-Judge、任务环境、Harness/沙箱、轨迹归因和持续回归，不是纯人工打分。</li>
+<li><strong>Managed Agents 成为独立工程对象：</strong>腾讯 WorkBuddy 岗位把 Agent 使用、编排、运行、治理、评测放进同一条产品链，说明企业开始招聘“运行与治理层”工程能力。</li>
+<li><strong>后端基本功仍是筛选底座：</strong>去哪儿、携程、阿里云公开面经同时追问业务建模、数据结构、数据库、并发/一致性、系统设计；只背 Agent/RAG 名词不足以通过面试。</li>
+<li><strong>统计背景对技术型评测更有价值：</strong>网商银行和蚂蚁样本明确出现置信区间、显著性、偏差、噪声、Golden Dataset、A/B 与评分器校准，这比纯模型训练更贴近“统计 + Python + 工程”的转型路径。</li>
+<li><strong>FDE 有新增，但不是无门槛扩张：</strong>中科曙光出现明确 AI Agent FDE，字节 FDE 公开监控也有新岗位；共同要求生产代码、Linux/Git/Docker、系统集成、私有化部署及客户现场闭环，且常见 3 年经验和出差。</li>
+<li><strong>公开薪资证据仍弱：</strong>本周新增高质量官网职位多数不公开薪资；明确低于 15K 下限的卡片已排除，因此不能得出薪资整体上涨或下降结论。</li>
+<li><strong>学习路线无需结构性调整：</strong>继续 W06 Tool Calling/最小 Agent Loop → FastAPI/RAG；但从现在开始所有练习都应保留失败处理、日志、测试和评测数据，为后续项目闭环做准备。</li></ol></section>
+
+<section class="card" id="coverage"><h2>02 / 检索覆盖与候选流水</h2><div class="grid"><div class="tile"><span class="label">初筛 / 去重</span><strong>39 / 34</strong><p>覆盖互联网、金融科技、研究机构、制造、外企与 FDE。</p></div><div class="tile"><span class="label">正文高价值样本</span><strong>17</strong><p>9 条新增/首次纳入，8 条延续核验。</p></div><div class="tile"><span class="label">社区候选 / 入表</span><strong>16 / 4</strong><p>模板答案、培训营销和无法核实原文的内容不入表。</p></div></div>
+<div class="table-wrap"><table class="jobs"><thead><tr><th>候选方向</th><th>初筛公司 / 岗位（去重后）</th><th>处理</th></tr></thead><tbody>
+<tr><td>AI 应用 / Agent / 后端</td><td>腾讯 WorkBuddy Managed Agents、CodeBuddy/WorkBuddy Agent、微信 Agent 后端；美团 Harness、商分 AI Builder、营销 Agent；字节 Data AML、Agent 平台；埃森哲 AI 全栈；小鹏 AI Agents；360 AI 应用；鼎捷 AI Agent；招商船舶 AI 开发；AMD Agent</td><td>14 条；正文 8 条，其余作延续或门槛样本</td></tr>
+<tr><td>技术型评测 / 质量平台</td><td>腾讯 AI 智能体评测、混元 Agent 评测 Infra；钉钉千问办公评测；蚂蚁 AI 创新产品评测、健康 Agent 评测；网商银行 Agent 评测；上海 AI 实验室应用评测；阿里云 AI 产品评测；字节 Agent 效果评测、AI 测评测试开发、大模型评测</td><td>11 条；本周最强结构信号</td></tr>
+<tr><td>AI 数据 Pipeline</td><td>腾讯混元大语言数据、阿里 AI 数据公共层、蚂蚁 AI 数据、字节评测数据链路</td><td>4 条；新增有限，仍以评测数据闭环为主</td></tr>
+<tr><td>工程型 PDE/FDE</td><td>中科曙光 AI Agent FDE、美团 B 端 AI 应用 FDE、字节中国广告 FDE、腾讯云 FDE、FDE 中国公开机会池</td><td>5 条；排除纯售前/客户成功/纯实施后保留 3 条正文样本</td></tr></tbody></table></div>
+<p><strong>排除：</strong>纯模型后训练、纯人工评测、低代码、运营、产品经理、纯售前/支持、月薪下限低于 15K、只有营销文案且无职位证据的条目。1 条 14–20K FastAPI/Agent 职位和 1 条 13–18K Agent 评测职位仅计入初筛，不进正文。</p></section>
+
+<section class="card" id="jobs"><h2>03 / 新增与高匹配代表岗位</h2><div class="table-wrap"><table class="jobs"><thead><tr><th>公司 / 岗位</th><th>日期 / 门槛</th><th>核心工程内容</th><th>判断</th></tr></thead><tbody>
+<tr><td><a href="https://careers.tencent.com/jobdesc.html?postId=2068944317736730624" target="_blank" rel="noopener"><strong>腾讯｜AI 智能体评测高级工程师 ↗</strong></a></td><td>10 月 9 日可访问；年限/城市以官网为准</td><td>Python、HumanEval/SWE-bench 等评测方法、智能体效果与工程评测。</td><td><span class="badge">高匹配 / 评测</span></td></tr>
+<tr><td><a href="https://careers.tencent.com/jobdesc.html?postId=2077641608832135168" target="_blank" rel="noopener"><strong>腾讯｜WorkBuddy Managed Agents 研发 ↗</strong></a></td><td>10 月 9 日可访问；门槛待官网动态字段核实</td><td>Agent 使用、编排、运行、治理、评测全链路。</td><td><span class="badge">高价值样板</span></td></tr>
+<tr><td><a href="https://careers.tencent.com/jobdesc.html?postId=2089237110640001024" target="_blank" rel="noopener"><strong>腾讯云｜Agent/RAG/Harness 工程岗 ↗</strong></a></td><td>2026-10-08 更新；3 年+</td><td>AI Agent、RAG、工具调用、智能体评测、Harness/Loop Engineering。</td><td><span class="badge challenge">经验挑战</span></td></tr>
+<tr><td><a href="https://careers.tencent.com/jobdesc.html?postId=2074756587444158464" target="_blank" rel="noopener"><strong>腾讯｜CodeBuddy/WorkBuddy Agent 研发 ↗</strong></a></td><td>2026-10-08 更新；3 年+</td><td>Agent 架构、Prompt、RAG、推理服务化与企业协作场景。</td><td><span class="badge challenge">经验挑战</span></td></tr>
+<tr><td><a href="https://www.jdwatch.work/jobs/j1pyy18wq" target="_blank" rel="noopener"><strong>钉钉｜千问办公 AI 评测工程师 ↗</strong></a></td><td>2026-09-27；杭州；本科；3 年+</td><td>模型/AgentLoop/Skills 自动化评测 Pipeline、合成评测集、LLM Judge、在线观测与归因。</td><td><span class="badge">很高 / 统计+工程</span></td></tr>
+<tr><td><a href="https://jobs.ultraai.site/jobs/ant/260812011389056" target="_blank" rel="noopener"><strong>蚂蚁｜Agent 评测工程师—AI 创新产品 ↗</strong></a></td><td>8 月收录；10 月仍可检索；年限待官网核实</td><td>任务环境、Benchmark、评分器、Harness/沙箱、持续评测、数据污染与统计噪声。</td><td><span class="badge">很高 / 技术评测</span></td></tr>
+<tr><td><a href="https://jobs.ultraai.site/jobs/ant/260702010708743" target="_blank" rel="noopener"><strong>网商银行｜大模型与 Agent 评测工程师 ↗</strong></a></td><td>8 月收录；招聘中；3 年+，1 年 AI 评测</td><td>金融 Rubric、Gold、多路 Judge、Trace 归因、A/B、置信区间、噪声基线与评测工具平台。</td><td><span class="badge challenge">高度对口 / 年限挑战</span></td></tr>
+<tr><td><a href="https://www.shlab.org.cn/joinus/detail/7674889611902683418?mode=social" target="_blank" rel="noopener"><strong>上海 AI 实验室｜AI 应用评测工程师 ↗</strong></a></td><td>2026-08-17；上海；本科；3 年+</td><td>模型×任务×Harness 平台，Agent 工具轨迹、权限、状态、资源和产物的全链路评测。</td><td><span class="badge challenge">工程通道 / 年限挑战</span></td></tr>
+<tr><td><a href="https://www.accenture.com/cn-en/careers/jobdetails?id=14477303_en" target="_blank" rel="noopener"><strong>埃森哲｜AI 全栈工程师（Agent）↗</strong></a></td><td>10 月 9 日可访问；大连；本科；3 年+</td><td>LangGraph/工具链、多 Agent、RAG、FastAPI、异步/微服务、Docker/K8s、CI/CD 和 0→1 交付。</td><td><span class="badge challenge">全栈样板 / 经验挑战</span></td></tr>
+<tr><td><a href="https://xiaopeng.jobs.feishu.cn/index/position/7578769398917695763/detail" target="_blank" rel="noopener"><strong>小鹏｜AI Agents 开发工程师 ↗</strong></a></td><td>10 月 8 日仍可检索；硕士；5 年+</td><td>业务 Agent、Python 后端、FastAPI/Flask/Django、模型 API、RAG 与规模化落地。</td><td><span class="badge challenge">长期样板 / 不宜当前主投</span></td></tr>
+<tr><td><a href="https://watchjobs.net/zh/explore/job/c1181-d13a33903674be4e/AI-Agent%E5%B7%A5%E7%A8%8B%E5%B8%88-FDE-%E5%A4%A9%E6%B4%A5-J13885-%E4%B8%AD%E7%A7%91%E6%9B%99%E5%85%89" target="_blank" rel="noopener"><strong>中科曙光｜AI Agent 工程师—FDE ↗</strong></a></td><td>约 9 月 28 日发布；天津；本科；3 年+</td><td>Python、多语言、RAG/Tool Use/MCP、Linux/Git/Docker/K8s、系统集成、私有化部署、现场闭环。</td><td><span class="badge challenge">工程型 FDE / 有出差</span></td></tr>
+<tr><td><a href="https://zhaopin.meituan.com/web/position/detail?highlightType=social&jobUnionId=4730850269" target="_blank" rel="noopener"><strong>美团｜商分 AI Builder ↗</strong></a></td><td>2026-09-29；上海；1 年</td><td>把高频业务分析沉淀为 AI Workflow，数据分析能力可直接迁移。</td><td><span class="badge">最现实低年限入口</span></td></tr>
+</tbody></table></div>
+<p class="muted">薪资未知的官网职位因方向高度相关而保留。平台估薪不作为官方薪资；投递前应再次打开官网确认状态、城市、年限和学历字段。</p></section>
+
+<section class="card" id="skills"><h2>04 / 高频技能与 W40 环比</h2><div class="table-wrap"><table class="jobs"><thead><tr><th>层级</th><th>本期共同要求</th><th>相对 W40</th></tr></thead><tbody>
+<tr><td><strong>必须掌握</strong></td><td>Python/Java/Go 之一、后端/API、Agent/Workflow、Tool Calling、问题拆解、数据处理与调试</td><td>稳定；后端基本功在面经中更突出</td></tr>
+<tr><td><strong>必须掌握</strong></td><td>评测集、指标、失败分类、自动执行、回归验证、可复现报告</td><td><strong>上升</strong>；从“加分项”变为多个岗位主职责</td></tr>
+<tr><td><strong>常见</strong></td><td>RAG、Context/Memory、向量检索、数据库/缓存、日志、重试、观测</td><td>稳定；RAG 继续基础设施化</td></tr>
+<tr><td><strong>常见加分</strong></td><td>LLM-as-a-Judge、Trace、Golden Dataset、沙箱、Harness、分布式调度、Docker/K8s</td><td><strong>上升</strong>；评测 Infra 与 Managed Agents 带动</td></tr>
+<tr><td><strong>少数岗位</strong></td><td>FastAPI 明确点名、统计推断/置信区间、金融专业评测、多 Agent、私有化部署</td><td>FastAPI 仍少量点名，但工程项目价值不变</td></tr></tbody></table></div>
+<div class="signal"><strong>同口径对比：</strong>W40 为 41 条初筛/36 条去重，本期为 39/34，公开样本量小幅回落；正文新增/首次纳入 9 条，延续核验 8 条，7 条历史候选无法再次稳定核实或动态字段不足，均未判定为下架。技术型评测和 Managed Agents 的结构信号增强；AI Data 数量未明显增加。</div>
+<p><strong>PDE/FDE：</strong>有新增，但样本仍少且门槛偏 3 年以上，不能得出“已成为大规模低年限入口”的结论。<strong>传统 DA / 前端：</strong>本任务未建立同规模对照池，本周没有足够证据判断它们是否继续减少；只能确认部分 AI Builder 岗位正在吸收业务分析职责。</p></section>
+
+<section class="card" id="community"><h2>05 / 社区面经与真实求职信号</h2><p>优先检索小红书、牛客、脉脉。小红书和脉脉公开原帖仍受登录/索引限制，本期没有把搜索摘要冒充完整原文；牛客共查看 12 条相关候选，保留 4 条，身份和录用结果除作者自述外无法独立核验。</p><div class="table-wrap"><table class="jobs"><thead><tr><th>来源 / 类型</th><th>岗位与轮次</th><th>可确认问题</th><th>可信度与启示</th></tr></thead><tbody>
+<tr><td><a href="https://www.nowcoder.com/feed/main/detail/2b1c35eace4a4bb3bd88ee669f163793" target="_blank" rel="noopener">牛客｜携程 AI 应用开发一面 ↗</a><br>面试 2026-09-03；作者称已 OC</td><td>AI 应用开发；一面；经验年限未知</td><td>问题来源、Agent 原子能力编排、上下文/记忆压缩、写权限、项目指标与 Bad Case。</td><td>第一手自述倾向；说明项目要讲清数据来源、权限和效果评估。</td></tr>
+<tr><td><a href="https://api-cdn.nowcoder.com/feed/main/detail/4f433b51ce454d40a609dc85400c85c2" target="_blank" rel="noopener">牛客｜去哪儿 27 届 AI 应用全栈一面 ↗</a><br>2026-09-16 发布</td><td>校招补充；一面</td><td>项目设计、业务建模、订单库存一致性、代码找错、算法复杂度。</td><td>第一手自述倾向；证明“AI 应用”仍按后端工程师筛选。</td></tr>
+<tr><td><a href="https://www.nowcoder.com/enterprise/1742/interview?pageSource=5011" target="_blank" rel="noopener">牛客｜阿里云 AI 应用开发一面汇总 ↗</a><br>9 月面试</td><td>校招补充；一面</td><td>幻觉与缓解、完整 RAG、两套 RAG 如何比较、MCP、海量商品库表设计、代码题。</td><td>平台汇总；具体作者/结果需二次核实。面试准备应同时覆盖 RAG 评测与数据库设计。</td></tr>
+<tr><td><a href="https://www.nowcoder.com/discuss/916372260636590080" target="_blank" rel="noopener">牛客｜Java 转 FDE 自述 ↗</a><br>9 月公开；作者称涨薪 30%</td><td>作者称面试十余家公司；轮次未知</td><td>端到端链路、数据接入、权限、召回、评估、日志、异常处理；工作混合工程、产品、交付与客户沟通。</td><td>第一手自述但薪资无法独立核验；可采纳职责观察，不把涨薪比例当市场统计。</td></tr>
+</tbody></table></div>
+<p><strong>降级/排除：</strong>“含完整答案”“三年面试五年模拟”、培训机构趋势文、搬运帖与夸张市场数字仅作为线索，不作真实面经或 HC/薪资证据。小红书、脉脉本期未取得可公开稳定核验的合格原帖。</p></section>
+
+<section class="card" id="action"><h2>06 / 对学习计划与求职准备的影响</h2><p><strong>不建议改动 V5.8 的主线和周次结构。</strong>当前 W06 的 Tool Schema、参数校验、执行结果回传、直接回答分支、max_steps、终止条件和工具失败处理，正好对应本周 JD 的 Tool Calling、Agent Loop、失败兜底和可评测执行。随后 FastAPI、RAG、pytest、Docker 继续按原计划推进。</p>
+<ol class="bullets"><li><strong>从 W06 起增加轻量评测记录：</strong>每次运行保存输入、模型决策、工具参数、工具结果、终止原因、步数、耗时和异常类型。</li><li><strong>W07/W08 项目增加最小 Golden Set：</strong>先做 20–30 条公开/合成案例，统计任务成功率、工具调用正确率、直接回答误判、超步数和失败恢复。</li><li><strong>后端底座不能延期：</strong>FastAPI 参数校验/异常、SQL、Linux/Git、pytest 要达到能解释和现场写的程度；面经证据不支持“只学 Agent、跳过后端”。</li><li><strong>项目叙事优先：</strong>业务问题 → 为什么用 Agent/Workflow → 工具与数据 → 权限/异常 → 评测指标 → Bad Case → 版本变化，而不是框架名清单。</li><li><strong>投递顺序不变：</strong>AI 应用/Agent/Python 后端主投；技术型评测与 AI 数据 Pipeline 辅投；工程型 FDE 只投开发占比高且能接受出差/交付的岗位。</li></ol></section>
+
+<section class="card" id="method"><h2>07 / 方法与限制</h2><p><strong>时间窗：</strong>优先 2026-07-10—2026-10-09；仍可访问且具备比较价值的半年内岗位可保留并标日期。<strong>来源：</strong>企业官网优先；JDWatch/职先机/WatchJobs 等聚合页用于补充岗位字段并明确标注；BOSS/猎聘动态页只作卡片；社区内容单独分层。<strong>薪资：</strong>明确月薪下限低于 15K 的正式职位不进正文；官网未披露但方向高度相关者保留。</p>
+<p><strong>本期限制：</strong>招聘动态页存在字段加载差异；部分岗位只能确认职位与技术关键词，年限、城市或发布日期写未知。小红书和脉脉原帖公开可访问性不足，没有绕过登录、验证码或访问限制。公开页不含姓名、邮箱、现雇主、内部项目、数据或规则。</p><p><a href="../index.html">返回总览 →</a></p></section>
+<footer class="footer">依据企业招聘页与可核实公开来源整理 · 报告/检索日 2026-10-09 · <a href="../index.html">返回总览</a></footer></main></body></html>
