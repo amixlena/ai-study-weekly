@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>W09 学习教程｜Embedding + Retriever Baseline</title>
+<link rel="stylesheet" href="../../assets/style.css?v=weekly-20260919">
+<meta name="description" content="W09 可直接学习教程：Embedding、cosine similarity、Top-k 与基础 Retriever；2026-10-12—10-18，16 小时。">
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a>
+<nav class="page-nav" aria-label="页面章节导航"><div class="page-nav-inner">
+<a class="brand" href="../../index.html">AI 学习<span> / WEEKLY</span></a><div class="nav-links">
+<a href="#summary">本周摘要</a><a href="#priority">任务边界</a><a href="#tutorial">核心教程</a><a href="#resources">资料方法</a><a href="#time">时间安排</a><a href="#acceptance">练习验收</a><a href="#status">整体进度</a>
+</div></div></nav>
+<main class="container" id="main-content">
+<nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="w01.html">W01</a><a href="w02.html">W02</a><a href="w03.html">W03</a><a href="2026-09-07-w04.html">W04</a><a href="2026-09-14-w05.html">W05</a><a href="2026-09-21-w06.html">W06</a><a href="2026-09-28-w07.html">W07</a><a href="2026-10-05-w08.html">W08</a><a href="2026-10-12-w09.html" aria-current="page">W09</a></nav>
+
+<section class="hero" id="overview"><div class="eyebrow">WEEK 09 · 可直接学习教程</div>
+<h1>Embedding<span class="title-plus"> + </span>Retriever Baseline</h1>
+<p class="lead">把 W08 的稳定 Chunk 转换成向量，用 cosine similarity 排序并返回 Top-k，完成第一个可查询、可解释、可测试的检索基线。</p>
+<div class="hero-meta"><span class="chip">本周执行版</span><span class="chip">2026.10.12—10.18</span><span class="chip">标准容量：16 小时</span><span class="chip">Master Plan V5.8</span></div>
+<div class="intro"><div class="hero-note"><small>本期两行概要</small>
+<p>理解文本 Embedding 与 cosine similarity，用同一模型为 Chunk 和 Query 生成向量，独立实现 Top-k Retriever。</p>
+<p>建立固定查询与预期命中文档，比较 k 值和失败案例，产出可查询的 baseline 与最小 retrieval test cases。</p>
+</div><div class="calendar"><small>本周交付</small>
+<div><strong>01</strong><span>可查询的 baseline retriever</span></div>
+<div><strong>02</strong><span>固定 query / expected chunk 用例</span></div>
+<div><strong>03</strong><span>Top-k 对照与失败记录</span></div>
+</div></div>
+<p class="muted source-note">依据：Master Plan V5.8 的 W09 默认切片。版本敏感示例已于 2026-10-14 对照官方 Embeddings API；模型名、输入限制和计费以实际供应商最新文档为准。</p></section>
+
+<section class="card" id="summary"><h2><span class="section-num">01</span>本周结论摘要</h2>
+<div class="kpis"><div class="kpi"><span>执行周</span><b>W09</b><span>10 月 12—18 日</span></div><div class="kpi"><span>标准容量</span><b>16h</b><span>周末 8h + 8h</span></div><div class="kpi"><span>阶段位置</span><b>RAG 2/7</b><span>检索基线</span></div><div class="kpi"><span>核心证据</span><b>Top-k</b><span>固定查询可复测</span></div></div>
+<div class="callout ok"><strong>一句话目标：</strong>给定 W08 生成的 Chunk 和一个查询，你能用同一 Embedding 模型生成等维向量，计算 cosine similarity，稳定返回 Top-k 结果，并用固定用例说明哪里检索对、哪里失败。</div>
+<p>Baseline 不是“最优检索”，而是后续 W10 持久化、W11 优化、W12 Evaluation 的比较起点。先让数据流透明、可重复，再引入向量数据库或 Rerank。</p>
+</section>
+
+<section class="card" id="priority"><h2><span class="section-num">02</span>任务优先级、掌握程度与边界</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W09 任务表"><table class="task-table"><thead><tr><th>优先级</th><th>任务</th><th>掌握程度</th><th>时长</th></tr></thead><tbody>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-1">Embedding 概念与数据契约</a></td><td>L2：解释向量表达、维度、模型一致性与 Chunk / Query 两条路径。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-2">官方 API 与批量生成</a></td><td>L2：按当前 SDK 生成向量，验证数量、顺序、维度和空输入。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-3">Cosine similarity</a></td><td>L2：独立实现并处理维度不等、零向量和数值边界。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-4">Top-k Retriever</a></td><td>L2：从 query 到排序结果跑通，保留 chunk_id、source 和 score。</td><td>3.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-5">固定用例与 k 值实验</a></td><td>L2：至少 6 个查询，记录 expected / actual、失败原因与 k 值影响。</td><td>2h</td></tr>
+<tr><td><span class="tag p0">综合验收</span></td><td><a href="#lesson-6">整合、Debug 与闭卷重写</a></td><td>从骨架重写最小 Retriever，并在新查询上解释排序。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p1">P1</span></td><td>无新增课程项；批量大小、向量缓存和日志仅在 P0 跑通后小幅补强</td><td>P0 阻塞时全部转为 Debug，不追加工时。</td><td>融入</td></tr>
+<tr><td><span class="tag p2">P2 / 不做</span></td><td>Vector DB、pgvector、ANN 索引、Rerank、BM25 / Hybrid、RAG 生成链、Embedding 微调</td><td>明确留给 W10—W12 或更后阶段。</td><td>0h</td></tr>
+<tr><td colspan="3"><strong>标准容量合计（含综合验收）</strong></td><td><strong>16h</strong></td></tr>
+</tbody></table></div>
+<p class="muted">L2 = 能运行、修改、解释和 Debug；不是记住“Embedding 是向量”或只会调用现成 Vector Store。</p>
+</section>
+
+<section class="card" id="tutorial"><h2><span class="section-num">03</span>核心教程正文</h2>
+<nav class="task-jumps" aria-label="教程快捷跳转"><a href="#lesson-1">1. 向量契约</a><a href="#lesson-2">2. API 批量生成</a><a href="#lesson-3">3. 余弦相似度</a><a href="#lesson-4">4. Top-k 检索</a><a href="#lesson-5">5. 固定测试</a><a href="#lesson-6">6. 综合练习</a></nav>
+
+<article class="task" id="lesson-1"><div class="task-head"><h3>一、Embedding：把语义映射成可比较的向量</h3><span class="duration">3 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">AI 主讲 + 主课程</span></div>
+<p><strong>Embedding（嵌入向量）</strong>是模型把文本映射成一列浮点数的结果。语义相近的文本通常在向量空间中更接近。Retriever 不直接“读懂”全文，它先把 Query 和 Chunk 放进同一个向量空间，再用相似度排序。</p>
+<div class="flow"><span class="node">Chunk 文本</span><span class="arrow">→</span><span class="node">Embedding 模型</span><span class="arrow">→</span><span class="node">Chunk 向量</span><span class="arrow">↘</span><span class="node">相似度排序</span></div>
+<div class="flow"><span class="node">Query 文本</span><span class="arrow">→</span><span class="node">同一模型</span><span class="arrow">→</span><span class="node">Query 向量</span><span class="arrow">↗</span></div>
+<h4>四条必须守住的契约</h4><ul><li><strong>同一模型：</strong>Chunk 和 Query 必须来自同一 Embedding 模型与配置。</li><li><strong>同一维度：</strong>长度不同的向量不可直接点积；切换模型后要重建全部 Chunk 向量。</li><li><strong>原文可追踪：</strong>向量必须和 <code>chunk_id</code>、文本、source 绑定，不能只保存一串数字。</li><li><strong>空文本前置拒绝：</strong>清洗后为空的 Chunk 不应进入 API。</li></ul>
+<pre><code>from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Chunk:
+    chunk_id: str
+    text: str
+    source: str
+
+@dataclass(frozen=True)
+class EmbeddedChunk:
+    chunk: Chunk
+    vector: list[float]
+
+def validate_chunks(chunks: list[Chunk]) -&gt; None:
+    if not chunks:
+        raise ValueError("chunks 不能为空")
+    ids = [item.chunk_id for item in chunks]
+    if len(ids) != len(set(ids)):
+        raise ValueError("chunk_id 必须唯一")
+    if any(not item.text.strip() for item in chunks):
+        raise ValueError("Chunk 文本不能为空")</code></pre>
+<div class="task-guide"><h4>怎么学</h4><p><strong>讲解 45m：</strong>让 AI 用“地图坐标”类比解释向量，但随后回到数据契约。<strong>主课程 35m：</strong>只读 All-in-RAG「向量嵌入」中定义与检索相关段落。<strong>动手 70m：</strong>写 dataclass、校验与 5 个合成 Chunk。<strong>闭卷 30m：</strong>画出两条向量路径并解释为什么不能混模型。</p></div>
+</article>
+
+<article class="task" id="lesson-2"><div class="task-head"><h3>二、调用 Embeddings API：批量输入并验证映射</h3><span class="duration">2.5 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">官方文档主讲 + 实验主导</span></div>
+<p>以当前 OpenAI Python SDK 为最小示例。<code>OpenAI()</code> 从环境读取凭据；不要把密钥写进源码或公开仓库。一次传入多个文本便于减少请求次数，但返回后仍要检查数量、index 与维度。</p>
+<pre><code>from openai import OpenAI
+
+client = OpenAI()
+
+def embed_texts(
+    texts: list[str],
+    model: str = "text-embedding-3-small",
+) -&gt; list[list[float]]:
+    cleaned = [text.strip() for text in texts]
+    if not cleaned or any(not text for text in cleaned):
+        raise ValueError("texts 必须是非空字符串列表")
+
+    response = client.embeddings.create(model=model, input=cleaned)
+    ordered = sorted(response.data, key=lambda item: item.index)
+    vectors = [item.embedding for item in ordered]
+
+    if len(vectors) != len(cleaned):
+        raise RuntimeError("返回向量数量与输入不一致")
+    dimensions = {len(vector) for vector in vectors}
+    if len(dimensions) != 1:
+        raise RuntimeError("同一批向量维度不一致")
+    return vectors</code></pre>
+<h4>常见错误 → 原因 → 正确做法</h4><div class="two-col"><div class="mini"><h4>错误：循环逐条请求</h4><pre><code>vectors = [embed_texts([x])[0] for x in texts]</code></pre><p>能跑但请求多、慢且更容易遇到中途失败。先用小批量列表调用；超长输入或限流再做分批。</p></div><div class="mini"><h4>错误：相信返回顺序而不验证</h4><pre><code>vectors = [item.embedding for item in response.data]</code></pre><p>显式按 <code>index</code> 排序并校验数量，避免 Chunk 与向量错配。</p></div></div>
+<div class="callout warn"><strong>版本边界：</strong>本页只固定调用形状，不把未确认的超时、重试、维度裁剪参数硬塞入请求。若使用其他供应商，替换 <code>embed_texts</code> 适配层，并以该供应商官方文档为准。</div>
+<div class="task-guide"><h4>练习</h4><p>先对 5 个 Chunk 批量生成向量，打印“输入数、返回数、维度、首个 chunk_id”，不要打印整条向量。故意加入空字符串，确认在发请求前失败；再删掉空串重跑。</p></div>
+</article>
+
+<article class="task" id="lesson-3"><div class="task-head"><h3>三、Cosine similarity：比较方向，不被长度主导</h3><span class="duration">2.5 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">AI 主讲 + 手写实验</span></div>
+<p><strong>Cosine similarity（余弦相似度）</strong>是两个非零向量点积除以各自 L2 范数的乘积。它关注向量方向而不是绝对长度。W09 要会写、会测、会解释；不要求推导高等数学。</p>
+<pre><code>import numpy as np
+
+def cosine_similarity(a: list[float], b: list[float]) -&gt; float:
+    left = np.asarray(a, dtype=float)
+    right = np.asarray(b, dtype=float)
+    if left.ndim != 1 or right.ndim != 1:
+        raise ValueError("只接受一维向量")
+    if left.shape != right.shape:
+        raise ValueError(f"维度不一致: {left.shape} vs {right.shape}")
+    denominator = np.linalg.norm(left) * np.linalg.norm(right)
+    if denominator == 0:
+        raise ValueError("零向量没有可用的 cosine similarity")
+    score = float(np.dot(left, right) / denominator)
+    return max(-1.0, min(1.0, score))</code></pre>
+<h4>最小手算 / 代码实验</h4><pre><code>assert cosine_similarity([1, 0], [1, 0]) == 1.0
+assert cosine_similarity([1, 0], [0, 1]) == 0.0
+
+# 应抛错：维度不一致、零向量
+# cosine_similarity([1, 0], [1, 0, 0])
+# cosine_similarity([0, 0], [1, 0])</code></pre>
+<p><strong>易错点：</strong>把 cosine distance 当 similarity；漏除范数；比较不同模型的向量；把相似度高直接等同于答案正确。Retriever 的分数只是排序信号，必须由固定 query / expected chunk 验证。</p>
+<div class="task-guide"><h4>学习节奏</h4><p>AI 解释公式 25m → NumPy 官方 <code>dot</code>/<code>norm</code> 20m → 手写函数 40m → 4 组边界测试 35m → 用真实 Embedding 比较三句语义 30m。</p></div>
+</article>
+
+<article class="task" id="lesson-4"><div class="task-head"><h3>四、Baseline Retriever：Query → 排序 → Top-k</h3><span class="duration">3.5 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">实验主导</span></div>
+<p><strong>Retriever（检索器）</strong>接收查询并返回最相关的 Chunk。Baseline 用线性扫描即可：数据量小、流程透明、方便 Debug。W10 再把相同接口接到持久化向量存储。</p>
+<pre><code>from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class SearchHit:
+    chunk_id: str
+    text: str
+    source: str
+    score: float
+
+def retrieve(
+    query: str,
+    items: list[EmbeddedChunk],
+    top_k: int = 3,
+) -&gt; list[SearchHit]:
+    if not query.strip():
+        raise ValueError("query 不能为空")
+    if not items:
+        raise ValueError("索引不能为空")
+    if top_k &lt; 1:
+        raise ValueError("top_k 必须大于 0")
+
+    query_vector = embed_texts([query])[0]
+    hits = [
+        SearchHit(
+            chunk_id=item.chunk.chunk_id,
+            text=item.chunk.text,
+            source=item.chunk.source,
+            score=cosine_similarity(query_vector, item.vector),
+        )
+        for item in items
+    ]
+    hits.sort(key=lambda hit: (-hit.score, hit.chunk_id))
+    return hits[: min(top_k, len(hits))]</code></pre>
+<p>使用 <code>(-score, chunk_id)</code> 作为排序键，是为了相同分数时结果仍稳定。<code>top_k</code> 大于文档数时返回全部结果，而不是产生下标错误。</p>
+<h4>先建索引，再多次查询</h4><pre><code>def build_index(chunks: list[Chunk]) -&gt; list[EmbeddedChunk]:
+    validate_chunks(chunks)
+    vectors = embed_texts([chunk.text for chunk in chunks])
+    return [
+        EmbeddedChunk(chunk=chunk, vector=vector)
+        for chunk, vector in zip(chunks, vectors, strict=True)
+    ]
+
+index = build_index(chunks)          # Chunk 只嵌入一次
+results = retrieve("如何处理空文档？", index, top_k=3)</code></pre>
+<div class="callout warn"><strong>错误模式：</strong>每次查询都重算全部 Chunk 向量；只返回文本而丢失 metadata；排序方向写反；把 <code>top_k</code> 当相似度阈值；吞掉 API 错误后返回空列表。每种错误都应能在日志或测试中被发现。</div>
+<div class="task-guide"><h4>必须动手</h4><p>用 W08 的 8—20 个 Chunk 建索引；依次运行 3 个明确查询和 1 个库外查询。结果打印 rank、score、chunk_id、source 与前 80 字，不把整向量输出到终端。</p></div>
+</article>
+
+<article class="task" id="lesson-5"><div class="task-head"><h3>五、固定 Retrieval Test Cases：让“感觉不错”变成可复测</h3><span class="duration">2 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">Evaluation 预埋</span></div>
+<p>至少写 6 个小用例：4 个应命中、1 个近义改写、1 个库外或模糊查询。当前只记录最简单的 <strong>Hit@k</strong>：期望 Chunk 是否出现在前 k 个结果中；正式指标留给 W12。</p>
+<pre><code>TEST_CASES = [
+    {"query": "空文档如何处理？", "expected_id": "guide-003"},
+    {"query": "切块重叠有什么作用？", "expected_id": "guide-007"},
+    # TODO: 再补 4 个，并保留一个故意困难的查询
+]
+
+def hit_at_k(case: dict, index: list[EmbeddedChunk], k: int) -&gt; bool:
+    ids = [hit.chunk_id for hit in retrieve(case["query"], index, k)]
+    return case["expected_id"] in ids</code></pre>
+<div class="table-wrap" role="region" tabindex="0" aria-label="实验记录模板"><table class="task-table"><thead><tr><th>query</th><th>expected</th><th>Top-1</th><th>Top-3</th><th>观察</th></tr></thead><tbody><tr><td>空文档如何处理？</td><td>guide-003</td><td>□</td><td>□</td><td>词面 / 语义是否一致？</td></tr><tr><td>近义改写</td><td>自填</td><td>□</td><td>□</td><td>改写后排名如何变化？</td></tr><tr><td>库外问题</td><td>无可靠答案</td><td>—</td><td>—</td><td>最高分仍会返回，不能假装有答案。</td></tr></tbody></table></div>
+<p><strong>重要边界：</strong>Top-k 总会返回若干结果，不等于这些结果相关。阈值、拒答和 Answer Evaluation 都不在本周展开，但要把“库外查询仍返回结果”记录为 baseline 局限。</p>
+</article>
+
+<article class="task" id="lesson-6"><div class="task-head"><h3>六、综合练习骨架：你先写，AI 只分级提示</h3><span class="duration">2.5 小时</span></div><div class="task-meta"><span class="pill p0">综合验收</span><span class="pill">闭卷重写</span></div>
+<pre><code># src/retrieval.py
+def load_chunks(path):
+    """TODO: 读取 W08 JSONL，构造 Chunk；拒绝坏数据。"""
+    ...
+
+def build_index(chunks, embedder):
+    """TODO: 批量向量化；检查数量与维度；绑定 metadata。"""
+    ...
+
+def cosine_similarity(a, b):
+    """TODO: 形状、零向量、数值边界。"""
+    ...
+
+def retrieve(query, index, embedder, top_k=3):
+    """TODO: 查询向量化、打分、稳定排序、截取 Top-k。"""
+    ...</code></pre>
+<h4>Hint 阶梯</h4><ol><li>先让 <code>embedder(texts)</code> 成为可替换函数，测试时不用真实 API。</li><li>索引项必须同时保留 Chunk 和 vector。</li><li>排序键使用负分数，并增加稳定的第二键。</li><li>当 <code>top_k &gt; len(index)</code> 时，用 <code>min</code> 截断。</li></ol>
+<h4>边界测试清单</h4><ul class="checklist"><li>空 query</li><li>空索引</li><li><code>top_k=0</code> / 负数</li><li><code>top_k</code> 大于索引</li><li>不同维度向量</li><li>零向量</li><li>相同分数稳定排序</li><li>重复 chunk_id</li><li>API 数量不一致</li><li>库外查询仍返回结果</li></ul>
+<div class="task-guide"><h4>验收方式</h4><p>先完成骨架 → 运行固定用例 → 让 AI 只指出一个最高优先级问题 → 自己修改 → 补边界测试 → 关闭资料，在空文件重写 <code>cosine_similarity</code> 和 <code>retrieve</code> → 能解释每个异常为何存在后再迁移到 <code>src/</code>。</p></div>
+</article>
+</section>
+
+<section class="card" id="resources"><h2><span class="section-num">04</span>资料与学习方法</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W09 资料表"><table class="task-table"><thead><tr><th>资料</th><th>本周只看哪里</th><th>主导方式</th><th>停止点</th></tr></thead><tbody>
+<tr><td><a href="https://developers.openai.com/api/docs/guides/embeddings">OpenAI 官方：Vector embeddings</a></td><td>Python 创建 Embedding、返回结构、模型与维度说明</td><td>官方文档主讲</td><td>能批量得到等维向量并校验返回；不扩展其他 API</td></tr>
+<tr><td><a href="https://developers.openai.com/api/reference/resources/embeddings/methods/create">OpenAI API Reference：Create embeddings</a></td><td><code>model</code>、<code>input</code>、响应 data / index / embedding</td><td>查参数与错误</td><td>只查实际调用到的字段</td></tr>
+<tr><td><a href="https://numpy.org/doc/stable/reference/generated/numpy.dot.html">NumPy：dot</a> · <a href="https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html">linalg.norm</a></td><td>一维向量的点积与 L2 norm</td><td>官方文档 + 实验</td><td>能写 cosine 函数和边界测试</td></tr>
+<tr><td><a href="https://datawhalechina.github.io/all-in-rag/">All-in-RAG</a></td><td>第三章「向量嵌入」的定义、索引构建背景；不进入向量数据库实战</td><td>原课程主讲</td><td>能把概念映射到自己的 Chunk 数据</td></tr>
+<tr><td><a href="https://docs.python.org/3/howto/sorting.html">Python Sorting HOWTO</a></td><td><code>sorted</code> / <code>list.sort</code> 与 key</td><td>JIT 补课</td><td>能稳定按 score 降序、chunk_id 次序排序</td></tr>
+<tr><td>ChatGPT</td><td>中文解释、分级 Hint、错误定位、闭卷提问</td><td>AI 主讲 / 检查</td><td>不直接代写完整练习；每轮只解一个阻塞点</td></tr>
+</tbody></table></div>
+<p class="muted">资料输入控制在约 35%；至少 65% 时间用于代码、实验、Debug、记录与闭卷重写。无需额外找视频；若概念仍不清楚，再只选与 Embedding / cosine / Top-k 直接相关的短选段。</p>
+</section>
+
+<section class="card" id="time"><h2><span class="section-num">05</span>执行顺序与 16 小时时间分配</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W09 时间分配"><table class="task-table"><thead><tr><th>时段</th><th>任务</th><th>内部拆分</th><th>交付</th></tr></thead><tbody>
+<tr><td>周六 09:00—12:00</td><td>Embedding 与数据契约 · 3h</td><td>讲解/课程 1.25h；dataclass 与校验 1.25h；闭卷图 0.5h</td><td>Chunk / vector 契约</td></tr>
+<tr><td>周六 13:00—15:30</td><td>API 与批量生成 · 2.5h</td><td>官方文档 0.6h；实现 1.2h；错误实验 0.7h</td><td><code>embed_texts</code></td></tr>
+<tr><td>周六 15:30—18:00</td><td>Cosine similarity · 2.5h</td><td>公式/文档 0.6h；实现 0.9h；测试与真实向量 1h</td><td>相似度函数 + 测试</td></tr>
+<tr><td>周日 09:00—12:30</td><td>Top-k Retriever · 3.5h</td><td>建索引 1h；查询/排序 1.5h；异常路径 1h</td><td>可查询 baseline</td></tr>
+<tr><td>周日 13:30—15:30</td><td>固定用例与 k 实验 · 2h</td><td>6 用例 0.7h；k=1/3/5 0.7h；失败记录 0.6h</td><td>retrieval test cases</td></tr>
+<tr><td>周日 15:30—18:00</td><td>综合验收 · 2.5h</td><td>整合/Debug 1h；边界测试 0.7h；闭卷重写 0.8h</td><td>重写证据与说明</td></tr>
+<tr><td colspan="3"><strong>标准容量</strong></td><td><strong>16h</strong></td></tr>
+</tbody></table></div>
+<div class="callout"><strong>周五弹性 4—6h：</strong>只用于准备环境、读取 W08 JSONL、建立合成测试集或处理 API 权限；不计入 P0 保底，也不因有空就提前学习 W10。</div>
+</section>
+
+<section class="card" id="acceptance"><h2><span class="section-num">06</span>练习、验收与分工</h2>
+<h3>产出清单</h3><ul class="checks"><li><label><input type="checkbox"><span><strong>Baseline Retriever</strong><small>Query → Embedding → cosine → 稳定排序 → Top-k；保留 metadata。</small></span></label></li><li><label><input type="checkbox"><span><strong>固定测试集</strong><small>至少 6 个 query / expected_id，包括近义改写和困难查询。</small></span></label></li><li><label><input type="checkbox"><span><strong>Top-k 对照记录</strong><small>比较 k=1/3/5；记录命中、噪声和失败原因。</small></span></label></li><li><label><input type="checkbox"><span><strong>边界测试</strong><small>空输入、非法 k、维度不等、零向量、稳定排序至少覆盖 5 项。</small></span></label></li><li><label><input type="checkbox"><span><strong>闭卷重写</strong><small>不看资料重写 cosine 与 retrieve，并口述完整数据流。</small></span></label></li></ul>
+<h3>闭卷验收题</h3><ol><li>Embedding 为什么能支持语义检索？它和 Token、Chunk 分别是什么关系？</li><li>为什么 Chunk 和 Query 必须用同一模型？切换模型后哪些数据必须重建？</li><li>cosine similarity 的分子、分母各表示什么？零向量为什么要拒绝？</li><li><code>top_k=1</code> 与 <code>top_k=5</code> 的召回和噪声可能如何变化？</li><li>为什么“最高分结果”不等于“问题有答案”？</li><li>Baseline 哪些地方会在 W10—W12 被替换或加强？</li></ol>
+<div class="notice"><p><strong>你：</strong>写核心函数、运行真实 / 合成数据、先做 Debug、记录失败并闭卷重写。<strong>ChatGPT：</strong>中文解释、给分级 Hint、追问设计理由、检查实验结论。<strong>Codex：</strong>在你尝试后检查类型、异常、排序稳定性、测试隔离与文件结构，必要时协助把已理解代码迁入 <code>src/</code>。任何 AI 代码都必须由你运行、修改和解释。</p></div>
+</section>
+
+<nav class="week-pager" aria-label="相邻执行周"><a href="2026-10-05-w08.html"><small>上一周</small><strong>← W08 · Document Pipeline + Chunk</strong></a><a href="../../index.html"><small>学习归档</small><strong>查看全部周报 →</strong></a></nav>
+
+<section class="card" id="status"><h2><span class="section-num">07</span>整体 Agent 开发准备进度</h2>
+<div class="callout"><strong>默认执行假设：</strong>按 W01–W08 核心任务已完成排程，W09 尚未计入。若 W08 的 Chunk / metadata / 稳定输出阻塞本周，只补这条主链所需 P0，不机械重开旧周。</div>
+<div class="two-col"><div class="mini"><h3>本周开始前：25.8%</h3><p>8 / 31 个执行周</p><progress max="31" value="8" aria-label="本周开始前路线覆盖"></progress></div><div class="mini"><h3>本周完成后目标：29.0%</h3><p>9 / 31 个执行周</p><progress max="31" value="9" aria-label="本周完成后目标覆盖"></progress></div></div>
+<p>覆盖率＝执行周数 ÷ 31；它不是能力评分、工时占比或验收证据。W09 完成仍需以可运行 Retriever、固定用例、失败记录和闭卷解释判断。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="路线阶段进度"><table class="task-table"><tbody><tr><th>路线阶段</th><th>最终能力 / 证据</th><th>本周前</th><th>本周后目标</th></tr><tr><td>W01–W03｜基础启动</td><td>Python / Git 最低可用闭环</td><td>3/3</td><td>3/3</td></tr><tr><td>W04–W07｜前置能力</td><td>LLM API、Structured Output、Tool Calling、Agent Loop、FastAPI / RAG 全景</td><td>4/4</td><td>4/4</td></tr><tr><td>W08–W14｜RAG 工程</td><td>文档 Pipeline、检索、固定评测、API、测试、日志与部署</td><td>1/7</td><td>2/7</td></tr><tr><td>W15–W20｜Agent 深化</td><td>State、Memory、HITL、Trace / Recovery 与 Agent 评测</td><td>0/6</td><td>0/6</td></tr><tr><td>W21–W26｜Evaluation / Pipeline</td><td>Golden Dataset、批量运行、校验、回归与报告</td><td>0/6</td><td>0/6</td></tr><tr><td>W27–W31｜求职准备</td><td>作品集、简历、技术面试与反馈闭环</td><td>0/5</td><td>0/5</td></tr></tbody></table></div>
+<p><strong>本周能力变化：</strong>从“能生成稳定 Chunk”推进到“能用固定查询复测语义检索 baseline”。这是 W10 Vector Store 工程化、W11 检索优化和 W12 Evaluation 的共同基线。</p>
+<p><strong>未完成时：</strong>优先保住同模型向量化、cosine、稳定 Top-k 和 6 个固定用例；缓存与日志可滚动，P2 全部取消。</p>
+</section>
+
+<footer class="footer">依据：Master Plan V5.8 · W09 Embedding + Retriever Baseline · 官方资料核对：2026-10-14<p class="design-credit">页面更新：2026-10-14 · <a href="../../index.html">返回学习归档</a> · <a href="#overview">回到顶部 ↑</a></p></footer>
+</main>
+</body>
+</html>
