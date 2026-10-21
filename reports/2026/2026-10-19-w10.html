@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>W10 学习教程｜Vector DB / PostgreSQL 工程化</title>
+<link rel="stylesheet" href="../../assets/style.css?v=weekly-20260919">
+<meta name="description" content="W10 可直接学习教程：PostgreSQL、pgvector、持久化向量、metadata filter、相似度查询与基础 EXPLAIN；2026-10-19—10-25，16 小时。">
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a>
+<nav class="page-nav" aria-label="页面章节导航"><div class="page-nav-inner">
+<a class="brand" href="../../index.html">AI 学习<span> / WEEKLY</span></a><div class="nav-links">
+<a href="#summary">本周摘要</a><a href="#priority">任务边界</a><a href="#tutorial">核心教程</a><a href="#resources">资料方法</a><a href="#time">时间安排</a><a href="#acceptance">练习验收</a><a href="#status">整体进度</a>
+</div></div></nav>
+<main class="container" id="main-content">
+<nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="w01.html">W01</a><a href="w02.html">W02</a><a href="w03.html">W03</a><a href="2026-09-07-w04.html">W04</a><a href="2026-09-14-w05.html">W05</a><a href="2026-09-21-w06.html">W06</a><a href="2026-09-28-w07.html">W07</a><a href="2026-10-05-w08.html">W08</a><a href="2026-10-12-w09.html">W09</a><a href="2026-10-19-w10.html" aria-current="page">W10</a></nav>
+
+<section class="hero" id="overview"><div class="eyebrow">WEEK 10 · 可直接学习教程</div>
+<h1>Vector DB<span class="title-plus"> / </span>PostgreSQL 工程化</h1>
+<p class="lead">把 W09 的内存 Retriever 接入 PostgreSQL + pgvector：向量与 metadata 一起持久化，用 SQL 完成过滤和 Top-k 相似度查询，并留下可复跑的集成证据。</p>
+<div class="hero-meta"><span class="chip">本周执行版</span><span class="chip">2026.10.19—10.25</span><span class="chip">标准容量：16 小时</span><span class="chip">Master Plan V5.8</span></div>
+<div class="intro"><div class="hero-note"><small>本期两行概要</small>
+<p>理解 Vector Database 的工程职责，用 PostgreSQL + pgvector 保存 Chunk、向量、模型版本与 metadata。</p>
+<p>实现可重复写入、metadata filter、cosine Top-k 查询，并用基础索引与 EXPLAIN 观察查询路径。</p>
+</div><div class="calendar"><small>本周交付</small>
+<div><strong>01</strong><span>持久化 document_chunks 表</span></div>
+<div><strong>02</strong><span>写入、过滤与 Top-k 查询</span></div>
+<div><strong>03</strong><span>Retriever → Vector Store 集成</span></div>
+</div></div>
+<p class="muted source-note">依据：Master Plan V5.8 的 W10 默认切片。版本敏感示例已于 2026-10-21 对照 PostgreSQL、pgvector 与 Psycopg 3 官方文档；实际向量维度必须与所选 Embedding 模型一致。</p></section>
+
+<section class="card" id="summary"><h2><span class="section-num">01</span>本周结论摘要</h2>
+<div class="kpis"><div class="kpi"><span>执行周</span><b>W10</b><span>10 月 19—25 日</span></div><div class="kpi"><span>标准容量</span><b>16h</b><span>周末 8h + 8h</span></div><div class="kpi"><span>阶段位置</span><b>RAG 3/7</b><span>持久化检索</span></div><div class="kpi"><span>核心证据</span><b>SQL Top-k</b><span>可写入、可过滤、可复跑</span></div></div>
+<div class="callout ok"><strong>一句话目标：</strong>给定 W08 Chunk 与 W09 Embedding，你能把记录可靠写入 pgvector，按 metadata 过滤并用 cosine distance 返回 Top-k，再把结果还原为包含文本、来源和分数的 SearchHit。</div>
+<p>本周不是追求“大数据量下最快”，而是把数据契约、持久化边界和查询路径做对。完成后，W11 才有稳定基线比较 Rerank 或检索优化。</p>
+</section>
+
+<section class="card" id="priority"><h2><span class="section-num">02</span>任务优先级、掌握程度与边界</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W10 任务表"><table class="task-table"><thead><tr><th>优先级</th><th>任务</th><th>掌握程度</th><th>时长</th></tr></thead><tbody>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-1">Vector DB 职责与数据契约</a></td><td>L2：解释持久化层解决什么，以及 Chunk、Embedding、metadata 如何绑定。</td><td>2h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-2">PostgreSQL + pgvector 表结构</a></td><td>L2：创建扩展与表；理解主键、JSONB、向量维度、模型版本。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-3">Psycopg 批量写入与 Upsert</a></td><td>L2：安全绑定参数，事务化写入，重复运行不制造重复数据。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-4">Cosine Top-k SQL 查询</a></td><td>L2：从 query vector 到稳定 SearchHit，区分 distance 与 similarity。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-5">Metadata filter；基础索引 / EXPLAIN</a></td><td>L2 过滤；P1 观察查询计划，不做生产级调优。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">综合验收</span></td><td><a href="#lesson-6">集成、边界测试与闭卷重写</a></td><td>把 W09 Retriever 接到持久化 Store，并独立新增一个过滤条件。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p1">P1</span></td><td>HNSW / 普通 metadata 索引的用途；<code>EXPLAIN</code>、<code>EXPLAIN ANALYZE</code> 基本区别</td><td>会创建、会观察，不要求调参或证明性能收益。</td><td>融入第 5 项</td></tr>
+<tr><td><span class="tag p2">P2 / 不做</span></td><td>云数据库选型、迁移框架、连接池、async、分区、生产备份、高级索引调优、Rerank、BM25 / Hybrid、RAG Answer</td><td>留给项目后续；本周不额外开 PostgreSQL 系统课。</td><td>0h</td></tr>
+<tr><td colspan="3"><strong>标准容量合计（含综合验收）</strong></td><td><strong>16h</strong></td></tr>
+</tbody></table></div>
+<p class="muted">L2 = 能运行、修改、解释和 Debug。表建起来但无法说明维度、事务、距离运算符或过滤顺序，不算完成。</p>
+</section>
+
+<section class="card" id="tutorial"><h2><span class="section-num">03</span>核心教程正文</h2>
+<nav class="task-jumps" aria-label="教程快捷跳转"><a href="#lesson-1">1. 数据契约</a><a href="#lesson-2">2. 表结构</a><a href="#lesson-3">3. 写入</a><a href="#lesson-4">4. Top-k 查询</a><a href="#lesson-5">5. 过滤与计划</a><a href="#lesson-6">6. 综合练习</a></nav>
+
+<article class="task" id="lesson-1"><div class="task-head"><h3>一、Vector Database：不是“会理解文本”的数据库</h3><span class="duration">2 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">AI 主讲 + 主课程</span></div>
+<p><strong>Vector Database（向量数据库）</strong>在本周的职责是保存向量及其业务记录，并根据距离运算返回邻近记录。Embedding 模型负责把文本变成向量；数据库负责持久化、过滤、排序和返回数据。两者不要混成一个黑盒。</p>
+<div class="flow"><span class="node">Chunk + metadata</span><span class="arrow">→</span><span class="node">Embedding</span><span class="arrow">→</span><span class="node">PostgreSQL / pgvector</span><span class="arrow">→</span><span class="node">Filter + Top-k</span></div>
+<h4>这周要保存的最小记录</h4>
+<pre><code>{
+  "chunk_id": "guide-003",
+  "source": "guide.md",
+  "content": "空文档应在清洗阶段拒绝……",
+  "metadata": {"category": "pipeline", "language": "zh"},
+  "embedding_model": "text-embedding-3-small",
+  "embedding": [0.012, -0.034, ...]
+}</code></pre>
+<ul><li><strong>chunk_id：</strong>稳定主键，支持重复运行与 Upsert。</li><li><strong>content / source：</strong>查询命中后能还原上下文与来源。</li><li><strong>metadata：</strong>结构化过滤条件，不塞入整段正文。</li><li><strong>embedding_model：</strong>避免模型更换后把不兼容向量混在一起。</li><li><strong>embedding：</strong>维度必须等于建表时声明的维度。</li></ul>
+<div class="task-guide"><h4>学习方法</h4><p><strong>讲解 35m：</strong>让 AI 区分 Embedding 服务、Retriever 与 Vector Store。<strong>主课程 25m：</strong>只读 All-in-RAG 的向量存储入门段落。<strong>动手 40m：</strong>为 W08 JSONL 补齐上面的字段。<strong>闭卷 20m：</strong>画出写入与查询两条数据流。</p></div>
+</article>
+
+<article class="task" id="lesson-2"><div class="task-head"><h3>二、PostgreSQL + pgvector：定义可验证的存储 Schema</h3><span class="duration">2.5 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">官方文档主讲 + 实验主导</span></div>
+<p><strong>PostgreSQL</strong>负责关系数据、事务与查询；<strong>pgvector</strong>扩展增加 <code>vector</code> 类型和距离运算符。先在已安装 pgvector 的本地 PostgreSQL 中执行：</p>
+<pre><code>CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS document_chunks (
+    chunk_id text PRIMARY KEY,
+    source text NOT NULL,
+    content text NOT NULL,
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    embedding_model text NOT NULL,
+    embedding vector(1536) NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT now()
+);</code></pre>
+<div class="callout warn"><strong>不要盲抄 1536：</strong>它只是本教程所用示例模型的向量长度。先运行一次 Embedding，打印 <code>len(vector)</code>，再让表维度与实际模型配置一致；切换模型或维度时应重建该批向量。</div>
+<h4>错误示例 → 报错原因 → 正确做法</h4>
+<div class="two-col"><div class="mini"><h4>错误：维度不匹配</h4><pre><code>embedding vector(768)
+-- 实际写入 1536 维</code></pre><p>pgvector 会拒绝不同维度。先测实际长度，再建表。</p></div><div class="mini"><h4>错误：把 metadata 存成拼接字符串</h4><pre><code>metadata text  -- "category=pipeline,lang=zh"</code></pre><p>难以稳定过滤。使用 <code>jsonb</code>，字段名保持一致。</p></div></div>
+<pre><code>-- 建表后自查
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'document_chunks'
+ORDER BY ordinal_position;</code></pre>
+<div class="task-guide"><h4>必须动手</h4><p>创建一张空表；插入 1 条手写测试记录；用 <code>SELECT chunk_id, source, metadata FROM document_chunks;</code> 读回。确认主键重复时会报错，再进入 Upsert。</p></div>
+</article>
+
+<article class="task" id="lesson-3"><div class="task-head"><h3>三、Psycopg 3：参数绑定、事务与可重复 Upsert</h3><span class="duration">3 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">官方文档主讲 + 实验主导</span></div>
+<p><strong>Psycopg</strong>是 Python 的 PostgreSQL 驱动。不要用 f-string 拼 SQL 值；使用 <code>%s</code> 占位符和参数序列。连接上下文正常退出会提交，发生异常会回滚。</p>
+<pre><code>import os
+import psycopg
+from pgvector.psycopg import register_vector
+from psycopg.types.json import Jsonb
+
+UPSERT_SQL = """
+INSERT INTO document_chunks (
+    chunk_id, source, content, metadata, embedding_model, embedding
+) VALUES (%s, %s, %s, %s, %s, %s)
+ON CONFLICT (chunk_id) DO UPDATE SET
+    source = EXCLUDED.source,
+    content = EXCLUDED.content,
+    metadata = EXCLUDED.metadata,
+    embedding_model = EXCLUDED.embedding_model,
+    embedding = EXCLUDED.embedding,
+    updated_at = now()
+"""
+
+def save_chunks(rows: list[dict]) -&gt; None:
+    if not rows:
+        raise ValueError("rows 不能为空")
+
+    with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+        register_vector(conn)
+        values = [
+            (
+                row["chunk_id"], row["source"], row["content"],
+                Jsonb(row["metadata"]), row["embedding_model"],
+                row["embedding"],
+            )
+            for row in rows
+        ]
+        with conn.cursor() as cur:
+            cur.executemany(UPSERT_SQL, values)</code></pre>
+<h4>常见错误</h4>
+<div class="two-col"><div class="mini"><h4>危险：拼接用户值</h4><pre><code>sql = f"SELECT * FROM document_chunks WHERE source = '{source}'"</code></pre><p>引号、特殊字符会破坏 SQL，也会产生注入风险。值始终走参数绑定。</p></div><div class="mini"><h4>隐蔽：逐行提交</h4><pre><code>for row in rows:
+    insert(row)
+    conn.commit()</code></pre><p>中途失败会留下半批数据。小批量用一个事务；异常时让上下文回滚。</p></div></div>
+<p><strong>为什么 Upsert：</strong>W08 Pipeline 重跑后，同一 <code>chunk_id</code> 更新而不是复制。重复执行两次后，行数应不变；修改一条 content 后，记录应更新。</p>
+<div class="task-guide"><h4>练习顺序</h4><p>环境变量连接 20m → 注册 vector 类型 20m → 写入 5 条 50m → 重复运行与更新实验 40m → 故意制造维度错误并观察回滚 30m → 整理函数与日志 20m。</p></div>
+</article>
+
+<article class="task" id="lesson-4"><div class="task-head"><h3>四、Cosine Top-k：用 SQL 完成过滤后的邻近查询</h3><span class="duration">3 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">实验主导</span></div>
+<p>pgvector 的 <code>&lt;=&gt;</code> 返回 <strong>cosine distance（余弦距离）</strong>：越小越近。为了展示直观分数，可用 <code>1 - distance</code> 得到 cosine similarity，但排序仍按距离升序。</p>
+<pre><code>from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class SearchHit:
+    chunk_id: str
+    source: str
+    content: str
+    metadata: dict
+    score: float
+
+SEARCH_SQL = """
+SELECT chunk_id, source, content, metadata,
+       1 - (embedding &lt;=&gt; %s) AS score
+FROM document_chunks
+WHERE embedding_model = %s
+ORDER BY embedding &lt;=&gt; %s
+LIMIT %s
+"""
+
+def search(conn, query_vector, model: str, top_k: int = 3):
+    if top_k &lt; 1 or top_k &gt; 20:
+        raise ValueError("top_k 必须在 1 到 20 之间")
+    register_vector(conn)
+    with conn.cursor() as cur:
+        cur.execute(
+            SEARCH_SQL,
+            (query_vector, model, query_vector, top_k),
+        )
+        return [SearchHit(*row) for row in cur.fetchall()]</code></pre>
+<h4>Query → Vector Store 的完整边界</h4>
+<pre><code>def retrieve(query: str, top_k: int = 3) -&gt; list[SearchHit]:
+    if not query.strip():
+        raise ValueError("query 不能为空")
+    query_vector = embed_texts([query])[0]  # 沿用 W09 适配层
+    with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+        return search(conn, query_vector, "text-embedding-3-small", top_k)</code></pre>
+<ul><li>Query 与 Chunk 必须用同一 Embedding 模型与维度。</li><li><code>ORDER BY ... &lt;=&gt; ... ASC</code> 才是最近优先；写成降序会返回最不相似记录。</li><li><code>LIMIT</code> 控制返回数量，不是相似度阈值。</li><li>Top-k 总会返回现有记录；库外问题仍需记录为检索边界。</li></ul>
+<div class="task-guide"><h4>必须动手</h4><p>复用 W09 的 6 个固定查询，分别运行内存版与数据库版；对比 Top-3 的 <code>chunk_id</code>。若顺序不同，先核对模型、向量数据、距离方向和过滤条件，不要立刻加新框架。</p></div>
+</article>
+
+<article class="task" id="lesson-5"><div class="task-head"><h3>五、Metadata filter + 基础 Index / EXPLAIN</h3><span class="duration">3 小时</span></div><div class="task-meta"><span class="pill p0">P0 过滤</span><span class="pill p1">P1 索引与计划</span></div>
+<p><strong>Metadata filter（元数据过滤）</strong>先限定候选记录，再按向量距离排序。例如只检索中文 pipeline 文档：</p>
+<pre><code>SELECT chunk_id, source, content, metadata,
+       1 - (embedding &lt;=&gt; %(query)s) AS score
+FROM document_chunks
+WHERE embedding_model = %(model)s
+  AND metadata-&gt;&gt;'category' = %(category)s
+  AND metadata-&gt;&gt;'language' = %(language)s
+ORDER BY embedding &lt;=&gt; %(query)s
+LIMIT %(top_k)s;</code></pre>
+<p>使用固定、可解释的 metadata 字段。不要把过滤器作为 SQL 片段从外部直接拼进查询；允许的字段应由程序白名单映射。</p>
+<h4>P1：只观察，不做过度优化</h4>
+<pre><code>CREATE INDEX IF NOT EXISTS document_chunks_category_idx
+ON document_chunks ((metadata-&gt;&gt;'category'));
+
+CREATE INDEX IF NOT EXISTS document_chunks_embedding_hnsw_idx
+ON document_chunks USING hnsw (embedding vector_cosine_ops);
+
+EXPLAIN
+SELECT chunk_id
+FROM document_chunks
+WHERE metadata-&gt;&gt;'category' = 'pipeline'
+ORDER BY embedding &lt;=&gt; '[0.01, 0.02, ...]'
+LIMIT 3;</code></pre>
+<div class="callout warn"><strong>两条边界：</strong><code>EXPLAIN</code> 只展示计划；<code>EXPLAIN (ANALYZE, BUFFERS)</code> 会实际执行查询，只对安全 SELECT 使用。小表很可能选择顺序扫描，这不代表索引“坏了”。HNSW 是近似索引，带过滤时还要关注候选不足；本周只记录现象，不调大量参数。</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="查询实验记录"><table class="task-table"><thead><tr><th>实验</th><th>过滤条件</th><th>Top-3</th><th>计划观察</th><th>结论</th></tr></thead><tbody><tr><td>A</td><td>无</td><td>记录 ID</td><td>Seq / Index Scan</td><td>基线</td></tr><tr><td>B</td><td>category=pipeline</td><td>记录 ID</td><td>过滤行数</td><td>结果是否更聚焦</td></tr><tr><td>C</td><td>不存在的 category</td><td>空</td><td>—</td><td>程序如何返回</td></tr></tbody></table></div>
+<div class="task-guide"><h4>时间拆分</h4><p>JSONB 过滤 55m → Python 参数化封装 35m → 普通索引 / HNSW 35m → EXPLAIN 对照 35m → 记录边界 20m。P0 未跑通时，后 70m 全部转为 Debug，不碰索引。</p></div>
+</article>
+
+<article class="task" id="lesson-6"><div class="task-head"><h3>六、综合练习骨架：把 Retriever 接到 Persistent Vector Store</h3><span class="duration">2.5 小时</span></div><div class="task-meta"><span class="pill p0">综合验收</span><span class="pill">闭卷重写</span></div>
+<pre><code># src/vector_store.py
+class PgVectorStore:
+    def __init__(self, dsn: str, embedding_model: str):
+        # TODO: 保存配置，不在构造函数里执行大量工作
+        ...
+
+    def upsert(self, rows: list[dict]) -&gt; None:
+        # TODO: 校验字段、维度、唯一 ID；事务化 executemany
+        ...
+
+    def search(
+        self,
+        query_vector: list[float],
+        top_k: int = 3,
+        category: str | None = None,
+    ) -&gt; list[SearchHit]:
+        # TODO: 用白名单分支选择 SQL；不要拼接 category 值
+        ...</code></pre>
+<h4>用户先写，AI 分级提示</h4><ol><li><strong>提示 1：</strong>先只实现无过滤查询，确认 distance 排序。</li><li><strong>提示 2：</strong>再增加 category 的两个 SQL 模板，而不是动态拼接值。</li><li><strong>提示 3：</strong>重复 upsert 两次后用 <code>COUNT(*)</code> 验证幂等。</li><li><strong>提示 4：</strong>让集成测试使用 4—8 条合成文档，不使用敏感数据。</li></ol>
+<h4>边界测试清单</h4><ul><li>空 query、空 rows、<code>top_k=0</code>、<code>top_k&gt;记录数</code>。</li><li>重复 chunk_id、缺少 metadata 字段、过滤后无结果。</li><li>向量维度错误、模型名不一致、数据库连接失败。</li><li>批量中一条坏数据时整批是否回滚。</li><li>内存 Retriever 与 DB Retriever 在固定测试上的 Top-3 是否可解释。</li></ul>
+<div class="task-guide"><h4>闭卷要求</h4><p>关闭教程，重写：连接 → 注册 vector → 参数化 Upsert → cosine Top-k → 可选 metadata filter。然后新增 <code>language</code> 过滤条件并运行测试；最后才迁移到 <code>src/</code>，不要把未经理解的长代码直接复制进项目。</p></div>
+</article>
+</section>
+
+<section class="card" id="resources"><h2><span class="section-num">04</span>资料与学习方法</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="资料与使用方式"><table class="task-table"><thead><tr><th>资料</th><th>本周只看什么</th><th>主导方式</th><th>停止点</th></tr></thead><tbody>
+<tr><td><a href="https://github.com/pgvector/pgvector" target="_blank" rel="noreferrer">pgvector 官方 README</a></td><td>建扩展、vector 列、距离运算符、HNSW 与 filtering 说明</td><td>官方文档主讲</td><td>能建表、查询、解释 <code>&lt;=&gt;</code> 即停</td></tr>
+<tr><td><a href="https://github.com/pgvector/pgvector-python" target="_blank" rel="noreferrer">pgvector-python 官方 README</a></td><td>Psycopg 3 的 <code>register_vector</code> 与写入示例</td><td>官方示例 + 改写</td><td>适配自己的数据类后停</td></tr>
+<tr><td><a href="https://www.psycopg.org/psycopg3/docs/basic/params.html" target="_blank" rel="noreferrer">Psycopg 3 参数绑定</a> · <a href="https://www.psycopg.org/psycopg3/docs/basic/transactions.html" target="_blank" rel="noreferrer">事务</a></td><td><code>%s</code> 参数、上下文提交/回滚</td><td>官方文档主讲</td><td>能解释为何不拼 SQL 后停</td></tr>
+<tr><td><a href="https://www.postgresql.org/docs/current/datatype-json.html" target="_blank" rel="noreferrer">PostgreSQL JSON</a> · <a href="https://www.postgresql.org/docs/current/using-explain.html" target="_blank" rel="noreferrer">Using EXPLAIN</a></td><td>JSONB 过滤运算符与查询计划基础</td><td>官方文档主讲</td><td>会读节点与过滤条件即可</td></tr>
+<tr><td>All-in-RAG 对应向量存储章节</td><td>Vector Store 在 RAG Pipeline 的位置</td><td>原课程主讲</td><td>不扩展到 W11/W12</td></tr>
+<tr><td>ChatGPT</td><td>逐函数解释、错误定位、测试用例与提示</td><td>AI 主讲 / Debug</td><td>用户必须自己完成核心空白</td></tr>
+</tbody></table></div>
+<div class="callout"><strong>输入比例：</strong>资料阅读控制在约 35%；至少 65% 用于建表、写入、查询、Debug、集成测试与闭卷重写。遇到版本差异时，以当前官方文档和实际报错为准。</div>
+</section>
+
+<section class="card" id="time"><h2><span class="section-num">05</span>执行顺序与 16 小时时间分配</h2>
+<div class="two-col"><div class="mini"><h3>周六 · 8h｜先把数据稳定写进去</h3><ol><li>Vector DB 职责与数据契约：2h</li><li>PostgreSQL + pgvector Schema：2.5h</li><li>Psycopg Upsert 前半：2h</li><li>运行、记录、当天复盘：1.5h</li></ol></div><div class="mini"><h3>周日 · 8h｜查询、过滤、整合验收</h3><ol><li>完成写入与回滚实验：1h</li><li>Cosine Top-k 查询：3h</li><li>Metadata filter + 基础 EXPLAIN：2h</li><li>集成与闭卷重写：2h</li></ol></div></div>
+<p><strong>严格总计：</strong>2 + 2.5 + 3 + 3 + 3 + 2.5 = <strong>16h</strong>。表内任务包含各自阅读、练习和 Debug，不与周六/周日分配重复累加。</p>
+<p><strong>周五弹性 4—6h：</strong>只用于安装 PostgreSQL/pgvector、准备非敏感测试数据或排环境问题，不计入 P0 保底。若周末 P0 超时，P1 的 HNSW / EXPLAIN 时间全部转为写入与查询 Debug。</p>
+</section>
+
+<section class="card" id="acceptance"><h2><span class="section-num">06</span>练习、产出、验收与分工</h2>
+<h3>本周必须留下的工程证据</h3><ul><li><code>schema.sql</code>：扩展、表、必要索引；不包含凭据。</li><li><code>src/vector_store.py</code>：参数化 Upsert、Top-k 查询、可选 metadata filter。</li><li><code>tests/test_vector_store.py</code> 或最小验证脚本：正常、空结果、重复写入、坏维度、回滚。</li><li><code>notes/w10-query-lab.md</code>：内存 vs DB Top-3、过滤对照、EXPLAIN 观察与失败记录。</li></ul>
+<h3>闭卷验收题</h3><ol><li>为什么 Chunk 和 Query 必须使用同一 Embedding 模型？</li><li><code>vector(1536)</code> 中的 1536 从哪里来？错了会怎样？</li><li><code>&lt;=&gt;</code> 返回 distance 还是 similarity？排序方向是什么？</li><li>为什么不能用 f-string 拼接 source / category？</li><li>事务如何防止批量写入只成功一半？</li><li>metadata filter、Top-k、相似度阈值分别解决什么问题？</li><li><code>EXPLAIN</code> 与 <code>EXPLAIN ANALYZE</code> 的差别是什么？</li><li>为什么创建 HNSW 后，小数据仍可能看见顺序扫描？</li></ol>
+<h3>完成定义</h3><div class="callout ok"><strong>通过：</strong>从空表开始导入合成 Chunk；重复导入不增行；6 个固定查询能返回可解释 Top-k；至少两个 metadata 过滤用例通过；故意坏维度会失败且事务不留下半批数据；关闭资料后能重写查询核心并新增一种过滤。</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="用户与 AI 分工"><table class="task-table"><thead><tr><th>角色</th><th>负责</th><th>不能替代</th></tr></thead><tbody><tr><td>用户</td><td>亲自建表、补练习空白、运行 SQL/Python、读报错、写实验结论、闭卷重写</td><td>不能只复制最终代码或只看页面</td></tr><tr><td>ChatGPT</td><td>中文解释、逐级提示、报错定位、追问设计理由、检查边界测试</td><td>不直接完成全部练习，不替用户声称验收通过</td></tr><tr><td>Codex</td><td>在用户代码基础上做结构审查、补测试建议、核对参数化查询与敏感信息风险</td><td>不把陌生的大段工程代码直接合入项目</td></tr></tbody></table></div>
+</section>
+
+<section class="card" id="status"><h2><span class="section-num">07</span>整体 Agent 开发准备进度</h2>
+<div class="callout"><strong>默认执行假设：</strong>W01—W09 当周核心任务已完成，不自动重开历史欠账；W10 尚未计入已完成。阶段门是否通过仍要看代码、测试和可复现证据。</div>
+<div class="two-col"><div class="mini"><h3>本周开始前：29.0%</h3><p>9 / 31 个执行周</p><progress max="31" value="9" aria-label="本周开始前路线进度"></progress></div><div class="mini"><h3>本周完成后：32.3%</h3><p>10 / 31 个执行周（目标）</p><progress max="31" value="10" aria-label="本周完成后目标进度"></progress></div></div>
+<p>百分比 = 默认完成执行周数 ÷ 31；它是路线覆盖率，不是能力分数、实际工时比例或验收通过率。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="路线阶段进度"><table class="task-table"><thead><tr><th>路线阶段</th><th>所需产出</th><th>本周前</th><th>本周后目标</th></tr></thead><tbody>
+<tr><td>W01–W03｜基础启动</td><td>Python / Git 最低可用闭环</td><td>3/3</td><td>3/3</td></tr>
+<tr><td>W04–W07｜前置能力</td><td>LLM API、结构化输出、Agent Loop、FastAPI / RAG 全景</td><td>4/4</td><td>4/4</td></tr>
+<tr><td>W08–W14｜RAG 工程</td><td>Pipeline、Retriever、Vector Store、优化、Evaluation、API、Docker</td><td>2/7</td><td>3/7</td></tr>
+<tr><td>W15–W20｜Agent 深化</td><td>State、Memory、HITL、Trace、Recovery、Agent Evaluation</td><td>0/6</td><td>0/6</td></tr>
+<tr><td>W21–W26｜Evaluation / Pipeline</td><td>Golden Dataset、批处理、校验、重试、并发、Regression</td><td>0/6</td><td>0/6</td></tr>
+<tr><td>W27–W31｜求职准备</td><td>作品集、简历、面试与反馈闭环</td><td>0/5</td><td>0/5</td></tr>
+</tbody></table></div>
+<p><strong>阶段门提醒：</strong>W10 只是 RAG 项目门中的持久化存储环节；Gate 2 仍需 W11–W14 的固定 Evaluation Set、baseline vs 改进、API、pytest、Logging、Docker、README 与可复现步骤。</p>
+</section>
+
+<footer class="footer">Master Plan V5.8 · 可直接学习教程<p>页面更新：2026-10-21 · <a href="#overview">回到顶部 ↑</a> · <a href="../../index.html">返回总归档</a></p></footer>
+</main>
+</body>
+</html>
