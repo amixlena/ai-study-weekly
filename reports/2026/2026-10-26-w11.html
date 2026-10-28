@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>W11 学习教程｜Retrieval 优化与 Rerank</title>
+<link rel="stylesheet" href="../../assets/style.css?v=weekly-20260919">
+<meta name="description" content="W11 可直接学习教程：候选召回、Cross-Encoder Rerank、固定测试集、baseline 对照与必要的 Hybrid/RRF；2026-10-26—11-01，16 小时。">
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a>
+<nav class="page-nav" aria-label="页面章节导航"><div class="page-nav-inner">
+<a class="brand" href="../../index.html">AI 学习<span> / WEEKLY</span></a><div class="nav-links">
+<a href="#summary">本周摘要</a><a href="#priority">任务边界</a><a href="#tutorial">核心教程</a><a href="#resources">资料方法</a><a href="#time">时间安排</a><a href="#acceptance">练习验收</a><a href="#status">整体进度</a>
+</div></div></nav>
+<main class="container" id="main-content">
+<nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="w01.html">W01</a><a href="w02.html">W02</a><a href="w03.html">W03</a><a href="2026-09-07-w04.html">W04</a><a href="2026-09-14-w05.html">W05</a><a href="2026-09-21-w06.html">W06</a><a href="2026-09-28-w07.html">W07</a><a href="2026-10-05-w08.html">W08</a><a href="2026-10-12-w09.html">W09</a><a href="2026-10-19-w10.html">W10</a><a href="2026-10-26-w11.html" aria-current="page">W11</a></nav>
+
+<section class="hero" id="overview"><div class="eyebrow">WEEK 11 · 可直接学习教程</div>
+<h1>Retrieval 优化<span class="title-plus"> / </span>Rerank</h1>
+<p class="lead">保留 W10 的稳定 Vector Store，先扩大候选召回，再用 Cross-Encoder 对 Query–Chunk 对逐一评分；用同一组固定查询比较 baseline 与改进版，不凭感觉宣布效果变好。</p>
+<div class="hero-meta"><span class="chip">本周执行版</span><span class="chip">2026.10.26—11.01</span><span class="chip">标准容量：16 小时</span><span class="chip">Master Plan V5.8</span></div>
+<div class="intro"><div class="hero-note"><small>本期两行概要</small>
+<p>理解 Retrieve → Rerank 两阶段检索，控制 candidate_k 与 final_k，并实现可替换的 Cross-Encoder Reranker。</p>
+<p>冻结固定 query / expected chunk，用 Hit@k、MRR、延迟和失败分类比较 baseline 与改进版；只有证据支持时才保留优化。</p>
+</div><div class="calendar"><small>本周交付</small>
+<div><strong>01</strong><span>两阶段 Retriever</span></div>
+<div><strong>02</strong><span>baseline vs rerank 对照表</span></div>
+<div><strong>03</strong><span>失败案例与保留 / 回退结论</span></div>
+</div></div>
+<p class="muted source-note">依据：Master Plan V5.8 的 W11 默认切片。版本敏感示例已于 2026-10-28 对照 Sentence Transformers、pgvector 与 PostgreSQL 官方资料；模型下载、设备支持和许可证以实际环境及上游说明为准。</p></section>
+
+<section class="card" id="summary"><h2><span class="section-num">01</span>本周结论摘要</h2>
+<div class="kpis"><div class="kpi"><span>执行周</span><b>W11</b><span>10 月 26—11 月 1 日</span></div><div class="kpi"><span>标准容量</span><b>16h</b><span>周末 8h + 8h</span></div><div class="kpi"><span>阶段位置</span><b>RAG 4/7</b><span>检索优化</span></div><div class="kpi"><span>核心证据</span><b>A/B</b><span>同一测试集可比较</span></div></div>
+<div class="callout ok"><strong>一句话目标：</strong>在不破坏 W10 baseline 的前提下，从向量检索召回较大的候选集，使用 Reranker 重新排序，再用固定测试集证明哪些查询改善、哪些退化、增加了多少延迟。</div>
+<p>Reranker 不是“越强越好”的魔法层：它只重排已召回候选，无法找回候选集中不存在的正确 Chunk。先分清召回失败和排序失败，优化才有方向。</p>
+</section>
+
+<section class="card" id="priority"><h2><span class="section-num">02</span>任务优先级、掌握程度与边界</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W11 任务表"><table class="task-table"><thead><tr><th>优先级</th><th>任务</th><th>掌握程度</th><th>时长</th></tr></thead><tbody>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-1">冻结 baseline 与固定测试集</a></td><td>L2：保持 W10 结果不变，定义 query、expected_id、candidate_k / final_k。</td><td>2h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-2">两阶段 Retrieve → Rerank</a></td><td>L2：解释召回与精排职责，正确传递 ID、文本、原始分数。</td><td>2h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-3">Cross-Encoder Reranker</a></td><td>L2：本地加载、批量评分、稳定重排，能替换模型适配层。</td><td>3.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-4">可比较实验</a></td><td>L2：计算 Hit@k / MRR、延迟，逐查询比较而非只看平均值。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-5">失败分类与参数边界</a></td><td>L2：区分召回失败、排序失败、标注问题和数据问题。</td><td>2h</td></tr>
+<tr><td><span class="tag p1">条件 P0 / P1</span></td><td><a href="#lesson-6">关键词检索 + RRF</a></td><td>只有专有名词 / 精确关键词失败明显时补；否则转为 P0 Debug。</td><td>1h</td></tr>
+<tr><td><span class="tag p0">综合验收</span></td><td><a href="#lesson-7">整合、回退与闭卷重写</a></td><td>独立接入 / 关闭 rerank，并用证据决定是否保留。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p2">P2 / 不做</span></td><td>训练或微调 Reranker、复杂 Query Rewrite、多路召回平台、完整 BM25 课程、生成答案评测、无指标的参数扫描</td><td>留给 W12 或更后项目迭代。</td><td>0h</td></tr>
+<tr><td colspan="3"><strong>标准容量合计（含综合验收）</strong></td><td><strong>16h</strong></td></tr>
+</tbody></table></div>
+<p class="muted">本周达到 L2：代码可运行、结果可比较、失败可解释；不要求训练模型或做生产级检索性能优化。</p>
+</section>
+
+<section class="card" id="tutorial"><h2><span class="section-num">03</span>核心教程正文</h2>
+<nav class="task-jumps" aria-label="教程快捷跳转"><a href="#lesson-1">1. 冻结 Baseline</a><a href="#lesson-2">2. 两阶段</a><a href="#lesson-3">3. Reranker</a><a href="#lesson-4">4. 对照实验</a><a href="#lesson-5">5. 失败分类</a><a href="#lesson-6">6. RRF</a><a href="#lesson-7">7. 综合练习</a></nav>
+
+<article class="task" id="lesson-1"><div class="task-head"><h3>一、先冻结 Baseline：没有对照，就没有“优化”</h3><span class="duration">2 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">实验主导</span></div>
+<p><strong>Baseline（基线）</strong>是 W10 的向量 Top-k 查询：同一数据库快照、同一 Embedding 模型、同一 metadata filter、同一测试集。W11 新代码不能悄悄修改 Chunk、向量或预期答案，否则前后结果不可比较。</p>
+<pre><code>from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class RetrievalCase:
+    case_id: str
+    query: str
+    expected_ids: frozenset[str]
+    category: str | None = None
+
+TEST_CASES = [
+    RetrievalCase(
+        case_id="q01",
+        query="空文档在 Pipeline 的哪一步拒绝？",
+        expected_ids=frozenset({"guide-003"}),
+        category="pipeline",
+    ),
+    # TODO: 至少补到 8—12 条，包含近义改写、专有名词和困难查询
+]</code></pre>
+<h4>冻结四件事</h4><ul><li><strong>数据版本：</strong>记录 Chunk 文件 hash 或固定版本号。</li><li><strong>检索配置：</strong>embedding_model、filter、baseline_k。</li><li><strong>预期证据：</strong>每条 query 的 expected_ids，可有多个正确 Chunk。</li><li><strong>原始输出：</strong>保存 rank、chunk_id、vector_score、latency_ms。</li></ul>
+<div class="callout warn"><strong>常见错误：</strong>只挑 Rerank 表现好的 3 个查询；实验后再改 expected_id；前后更换数据或模型；只保存平均分不保存逐条结果。这些都会让结论失真。</div>
+<div class="task-guide"><h4>学习与动作</h4><p>概念讲解 25m → 复用 W09/W10 用例 35m → 补困难与精确词查询 30m → 跑 baseline 并保存 JSONL 30m。先得到不完美但可复现的基线，再写 Reranker。</p></div>
+</article>
+
+<article class="task" id="lesson-2"><div class="task-head"><h3>二、Retrieve → Rerank：先多召回，再精排序</h3><span class="duration">2 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">AI 主讲 + 官方资料</span></div>
+<p><strong>First-stage Retrieval（第一阶段召回）</strong>用向量索引快速取较大的候选集；<strong>Reranking（重排序）</strong>让模型同时读取 Query 和每个候选 Chunk，输出相关性分数，再截取 final_k。Cross-Encoder 通常更精细但更慢，所以只处理候选，不扫描全库。</p>
+<div class="flow"><span class="node">Query</span><span class="arrow">→</span><span class="node">Vector Top-20</span><span class="arrow">→</span><span class="node">Cross-Encoder</span><span class="arrow">→</span><span class="node">Final Top-3</span></div>
+<pre><code>@dataclass(frozen=True)
+class SearchHit:
+    chunk_id: str
+    content: str
+    vector_score: float
+    rerank_score: float | None = None
+
+def retrieve_then_rerank(query: str, candidate_k: int = 20, final_k: int = 3):
+    if not 1 &lt;= final_k &lt;= candidate_k:
+        raise ValueError("必须满足 1 &lt;= final_k &lt;= candidate_k")
+    candidates = vector_store.search(query, top_k=candidate_k)
+    return reranker.rerank(query, candidates, top_k=final_k)</code></pre>
+<p><strong>关键边界：</strong>如果正确 Chunk 不在 candidate_k 中，Reranker 无法创造它；先增大候选或修复召回。如果正确 Chunk 已在候选中但排得靠后，才是 Reranker 的主要用武之地。</p>
+<div class="task-guide"><h4>练习</h4><p>从一条 baseline 失败查询开始，分别记录正确 Chunk 是否出现在 Top-3、Top-10、Top-20。把问题标成“未召回”或“已召回但排序低”，不要立即改模型。</p></div>
+</article>
+
+<article class="task" id="lesson-3"><div class="task-head"><h3>三、Cross-Encoder：让 Query 与 Chunk 联合评分</h3><span class="duration">3.5 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">官方文档主讲 + 实验主导</span></div>
+<p><strong>Cross-Encoder（交叉编码器）</strong>接收成对文本 <code>(query, document)</code>，联合编码后输出相关性分数。它不生成可预存的 Chunk 向量，因此更适合第二阶段精排。中文 / 多语言示例选用上游模型卡明确提供 CrossEncoder 用法的 <code>BAAI/bge-reranker-v2-m3</code>；首次下载较大，若本机资源不足，保留接口并换成已授权的轻量或托管 Rerank 服务。</p>
+<pre><code>from sentence_transformers import CrossEncoder
+
+class LocalCrossEncoderReranker:
+    def __init__(self, model_name: str = "BAAI/bge-reranker-v2-m3"):
+        self.model = CrossEncoder(model_name)
+
+    def rerank(
+        self,
+        query: str,
+        candidates: list[SearchHit],
+        top_k: int,
+    ) -&gt; list[SearchHit]:
+        if not query.strip():
+            raise ValueError("query 不能为空")
+        if not candidates:
+            return []
+        pairs = [(query, hit.content) for hit in candidates]
+        scores = self.model.predict(pairs)
+        rescored = [
+            SearchHit(
+                chunk_id=hit.chunk_id,
+                content=hit.content,
+                vector_score=hit.vector_score,
+                rerank_score=float(score),
+            )
+            for hit, score in zip(candidates, scores, strict=True)
+        ]
+        rescored.sort(
+            key=lambda hit: (-(hit.rerank_score or float("-inf")), hit.chunk_id)
+        )
+        return rescored[:top_k]</code></pre>
+<h4>错误示例 → 原因 → 正确写法</h4>
+<div class="two-col"><div class="mini"><h4>错误：对全库逐条精排</h4><pre><code>pairs = [(query, row.content) for row in all_chunks]</code></pre><p>延迟与成本随全库增长。先用 Vector Store 召回 candidate_k。</p></div><div class="mini"><h4>错误：把不同模型分数直接混加</h4><pre><code>score = vector_score + rerank_score</code></pre><p>两种分数尺度未校准。最小版本直接按 rerank_score 排，并保留原分数用于诊断。</p></div></div>
+<div class="callout warn"><strong>模型与设备：</strong>第一次加载会下载权重；不要把模型文件提交 Git。MPS / CPU 是否可用、批量大小和最大长度由实际模型及设备决定。本周只测小候选集，不为速度盲目改精度或量化。</div>
+<div class="task-guide"><h4>时间拆分</h4><p>官方概念 35m → 环境与单对评分 45m → 候选批量评分 60m → 排序与稳定 tie-break 35m → 空候选 / 超长文本 / 模型失败 35m。先用 3 条候选跑通，再扩到 candidate_k=10/20。</p></div>
+</article>
+
+<article class="task" id="lesson-4"><div class="task-head"><h3>四、可比较实验：Hit@k、MRR、延迟与逐条差异</h3><span class="duration">3 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">Evaluation 预埋</span></div>
+<p><strong>Hit@k</strong>回答“前 k 个里是否至少有一个正确 Chunk”；<strong>MRR（Mean Reciprocal Rank，平均倒数排名）</strong>奖励正确结果排得更靠前。W12 才系统学习 Evaluation，本周只用两个透明指标支持检索决策。</p>
+<pre><code>def first_relevant_rank(ids: list[str], expected: frozenset[str]):
+    return next((i for i, item in enumerate(ids, start=1) if item in expected), None)
+
+def metrics(result_ids: list[str], expected: frozenset[str], k: int) -&gt; dict:
+    rank = first_relevant_rank(result_ids[:k], expected)
+    return {
+        f"hit@{k}": int(rank is not None),
+        "reciprocal_rank": 0.0 if rank is None else 1.0 / rank,
+    }</code></pre>
+<pre><code>from time import perf_counter
+
+def run_case(case: RetrievalCase, use_rerank: bool) -&gt; dict:
+    start = perf_counter()
+    hits = (
+        retrieve_then_rerank(case.query, candidate_k=20, final_k=3)
+        if use_rerank else vector_store.search(case.query, top_k=3)
+    )
+    elapsed_ms = (perf_counter() - start) * 1000
+    ids = [hit.chunk_id for hit in hits]
+    return {"case_id": case.case_id, "ids": ids, "latency_ms": elapsed_ms,
+            **metrics(ids, case.expected_ids, k=3)}</code></pre>
+<div class="table-wrap" role="region" tabindex="0" aria-label="实验比较模板"><table class="task-table"><thead><tr><th>case</th><th>baseline rank</th><th>rerank rank</th><th>变化</th><th>额外延迟</th><th>原因</th></tr></thead><tbody><tr><td>q01</td><td>3</td><td>1</td><td>改善</td><td>自填</td><td>候选已召回，精排纠正</td></tr><tr><td>q02</td><td>未命中</td><td>未命中</td><td>不变</td><td>自填</td><td>检查 candidate_k</td></tr><tr><td>q03</td><td>1</td><td>4</td><td>退化</td><td>自填</td><td>模型 / 标注 / Chunk</td></tr></tbody></table></div>
+<p><strong>比较规则：</strong>同一机器、同一数据、同一查询；模型先预热一次；逐条保存结果。平均指标改善但关键查询退化时，不能只报平均值。</p>
+</article>
+
+<article class="task" id="lesson-5"><div class="task-head"><h3>五、失败分类：先判断哪一层错，再决定改什么</h3><span class="duration">2 小时</span></div><div class="task-meta"><span class="pill p0">P0</span><span class="pill">Debug 主导</span></div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="失败分类"><table class="task-table"><thead><tr><th>现象</th><th>分类</th><th>先检查</th><th>不要先做</th></tr></thead><tbody><tr><td>正确 Chunk 不在 candidate_k</td><td>召回失败</td><td>过滤、Embedding、candidate_k、Chunk</td><td>换 Reranker</td></tr><tr><td>候选中有，但 Rerank 后仍靠后</td><td>排序失败</td><td>文本截断、模型语言、query 表达</td><td>声称已优化</td></tr><tr><td>baseline 好、rerank 退化</td><td>回归</td><td>逐条分数与模型适配</td><td>隐藏失败用例</td></tr><tr><td>两个结果都“错”但文档合理</td><td>标注问题</td><td>expected_ids 是否遗漏</td><td>盲调参数</td></tr><tr><td>专有名词 / 编号完全召回不到</td><td>词法缺口</td><td>关键词检索或 Hybrid</td><td>扩大课程边界</td></tr></tbody></table></div>
+<h4>最小 Debug 日志</h4><pre><code>{
+  "case_id": "q03",
+  "candidate_ids": ["c7", "c2", "c9"],
+  "vector_scores": [0.82, 0.80, 0.77],
+  "reranked_ids": ["c2", "c9", "c7"],
+  "rerank_scores": [4.1, 2.8, -0.6],
+  "expected_ids": ["c7"],
+  "failure_type": "rerank_regression"
+}</code></pre>
+<div class="task-guide"><h4>练习</h4><p>至少保留 2 个改善、1 个不变、1 个退化案例；每个写一句可验证原因和下一步。若没有退化，主动加入近义冲突或长 Chunk 边界查询，确认测试不是过于简单。</p></div>
+</article>
+
+<article class="task" id="lesson-6"><div class="task-head"><h3>六、条件补充：关键词检索与 RRF</h3><span class="duration">1 小时</span></div><div class="task-meta"><span class="pill p1">条件 P0 / P1</span><span class="pill">仅词法失败明显时</span></div>
+<p>若专有名词、编号、函数名等被向量检索漏掉，可用 PostgreSQL Full Text Search 建一个词法结果集，再用 <strong>RRF（Reciprocal Rank Fusion，倒数排名融合）</strong>合并排名。注意 PostgreSQL <code>ts_rank</code> / <code>ts_rank_cd</code> 是全文检索排名函数，不要把它错误称为 BM25。</p>
+<pre><code>def reciprocal_rank_fusion(result_lists: list[list[str]], rank_constant: int = 60):
+    scores: dict[str, float] = {}
+    for ids in result_lists:
+        for rank, chunk_id in enumerate(ids, start=1):
+            scores[chunk_id] = scores.get(chunk_id, 0.0) + 1.0 / (rank_constant + rank)
+    return sorted(scores, key=lambda item: (-scores[item], item))</code></pre>
+<pre><code>SELECT chunk_id, ts_rank_cd(
+    to_tsvector('simple', content),
+    plainto_tsquery('simple', %s)
+) AS lexical_score
+FROM document_chunks
+WHERE to_tsvector('simple', content) @@ plainto_tsquery('simple', %s)
+ORDER BY lexical_score DESC
+LIMIT %s;</code></pre>
+<div class="callout warn"><strong>中文边界：</strong>PostgreSQL 内置配置并不等于成熟中文分词方案。本周只用合成的英文 / 标识符 / 已可分词文本验证 RRF 数据流；若中文词法检索需要额外插件，不在本周安装新生态。</div>
+<p>P0 未完成时，这 1h 全部转给 Rerank Debug；没有明确词法失败证据时，不为了“技术栈丰富”强行加入 Hybrid。</p>
+</article>
+
+<article class="task" id="lesson-7"><div class="task-head"><h3>七、综合练习：可开关、可回退的优化层</h3><span class="duration">2.5 小时</span></div><div class="task-meta"><span class="pill p0">综合验收</span><span class="pill">闭卷重写</span></div>
+<pre><code># src/retrieval_pipeline.py
+class RetrievalPipeline:
+    def __init__(self, store, reranker=None):
+        self.store = store
+        self.reranker = reranker
+
+    def search(self, query: str, candidate_k: int = 20, final_k: int = 3):
+        # TODO 1: 校验 query 与 k
+        # TODO 2: 从 store 召回 candidates
+        # TODO 3: reranker 为 None 时走 baseline 回退
+        # TODO 4: rerank 失败时明确抛错或按配置回退，并记录原因
+        ...</code></pre>
+<h4>用户先写，AI 分级提示</h4><ol><li>先让 <code>reranker=None</code> 的输出与 W10 baseline 一致。</li><li>再接入 Reranker，保留 vector_score / rerank_score。</li><li>增加同一测试集的双路运行与 JSONL 结果保存。</li><li>最后才增加可选 Hybrid；不要重写 Vector Store。</li></ol>
+<h4>边界测试</h4><ul><li>空 query、空候选、candidate_k &lt; final_k。</li><li>正确 Chunk 不在候选；Reranker 返回数量不一致。</li><li>模型下载失败、推理异常、超长 Chunk、相同分数。</li><li>关闭 Reranker 后 baseline 是否无回归。</li><li>同一输入重复运行排名是否稳定。</li></ul>
+<div class="task-guide"><h4>闭卷要求</h4><p>关闭教程，重写两阶段数据流、Rerank 适配器、Hit@k / MRR 和回退分支；随后用一条新查询判断是召回失败还是排序失败。只有改进证据与延迟代价都记录后，才迁移到 <code>src/</code>。</p></div>
+</article>
+</section>
+
+<section class="card" id="resources"><h2><span class="section-num">04</span>资料与学习方法</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="资料与使用方式"><table class="task-table"><thead><tr><th>资料</th><th>本周只看什么</th><th>主导方式</th><th>停止点</th></tr></thead><tbody>
+<tr><td><a href="https://www.sbert.net/docs/cross_encoder/usage/usage.html" target="_blank" rel="noreferrer">Sentence Transformers CrossEncoder</a></td><td>pair scoring、Retrieve &amp; Re-Rank、<code>predict</code> / <code>rank</code></td><td>官方文档主讲</td><td>能解释两阶段并跑通批量评分即停</td></tr>
+<tr><td><a href="https://huggingface.co/BAAI/bge-reranker-v2-m3" target="_blank" rel="noreferrer">BAAI/bge-reranker-v2-m3 模型卡</a></td><td>CrossEncoder 调用、语言与许可证说明</td><td>上游模型卡 + 实验</td><td>不进入训练或量化</td></tr>
+<tr><td><a href="https://github.com/pgvector/pgvector#hybrid-search" target="_blank" rel="noreferrer">pgvector Hybrid Search</a></td><td>全文检索、RRF / Cross-Encoder 组合入口</td><td>官方 README</td><td>无词法失败证据则不实现</td></tr>
+<tr><td><a href="https://www.postgresql.org/docs/current/textsearch-controls.html" target="_blank" rel="noreferrer">PostgreSQL Text Search Ranking</a></td><td><code>ts_rank</code> / <code>ts_rank_cd</code> 的含义与限制</td><td>官方文档主讲</td><td>会做最小词法排序即停</td></tr>
+<tr><td>All-in-RAG 对应检索优化 / Rerank 小节</td><td>Rerank 在 RAG Pipeline 中的位置</td><td>原课程主讲</td><td>不展开框架化 RAG</td></tr>
+<tr><td>ChatGPT</td><td>中文概念、错误定位、实验表检查、失败分类追问</td><td>AI 主讲 / Debug</td><td>用户亲自写核心逻辑与结论</td></tr>
+</tbody></table></div>
+<div class="callout"><strong>输入比例：</strong>阅读不超过约 35%；至少 65% 用于固定测试、实现 Reranker、运行双路实验、分析退化和闭卷重写。视频不是必需，本期以官方文档和小实验为主。</div>
+</section>
+
+<section class="card" id="time"><h2><span class="section-num">05</span>执行顺序与 16 小时时间分配</h2>
+<div class="two-col"><div class="mini"><h3>周六 · 8h｜建立两阶段检索</h3><ol><li>冻结 baseline 与测试集：2h</li><li>Retrieve → Rerank 数据流：2h</li><li>Cross-Encoder 环境与单例：1.5h</li><li>批量评分、排序与边界：2.5h</li></ol></div><div class="mini"><h3>周日 · 8h｜比较、Debug、决定是否保留</h3><ol><li>Hit@k / MRR 对照实验：3h</li><li>失败分类与延迟记录：2h</li><li>条件 Hybrid / P0 Debug：1h</li><li>整合与闭卷重写：2h</li></ol></div></div>
+<p><strong>严格总计：</strong>2 + 2 + 3.5 + 3 + 2 + 1 + 2.5 = <strong>16h</strong>。各任务时长已经包含阅读、实践和 Debug，不与周末汇总重复累加。</p>
+<p><strong>周五弹性 4—6h：</strong>只用于模型下载、环境安装、准备非敏感测试集或解决 MPS / CPU 问题，不计入 P0 保底。遇到阻塞时先保证 baseline、rerank 与对照实验，取消 Hybrid。</p>
+</section>
+
+<section class="card" id="acceptance"><h2><span class="section-num">06</span>练习、产出、验收与分工</h2>
+<h3>本周必须留下的工程证据</h3><ul><li><code>src/reranker.py</code>：可替换的 Cross-Encoder 适配器与稳定排序。</li><li><code>src/retrieval_pipeline.py</code>：baseline / rerank 可开关，候选与最终 k 分离。</li><li><code>tests/test_reranker.py</code>：空候选、数量不一致、稳定排序和回退路径。</li><li><code>experiments/w11_retrieval_comparison.jsonl</code>：逐查询 baseline / rerank 排名、指标、延迟。</li><li><code>notes/w11-findings.md</code>：改善、退化、失败类型及“保留 / 回退”结论。</li></ul>
+<h3>闭卷验收题</h3><ol><li>为什么 Reranker 不能找回候选集中不存在的 Chunk？</li><li>candidate_k 与 final_k 分别控制什么？为什么前者通常更大？</li><li>Bi-Encoder 与 Cross-Encoder 的输入、输出和速度差异是什么？</li><li>Hit@3 与 MRR 分别反映什么？</li><li>如何区分召回失败、排序失败和标注问题？</li><li>为什么不能直接把 vector_score 与 rerank_score 相加？</li><li>什么时候才值得加入关键词 / Hybrid 检索？</li><li>优化后平均分提高但关键查询退化，如何处理？</li></ol>
+<h3>完成定义</h3><div class="callout ok"><strong>通过：</strong>至少 8—12 条固定查询可复跑；baseline 与 rerank 使用相同数据和标注；每条保留排名与延迟；至少分析 1 个退化案例；Reranker 可关闭并回到 W10 行为；最终结论明确说明是否保留优化及理由。</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="用户与 AI 分工"><table class="task-table"><thead><tr><th>角色</th><th>负责</th><th>不能替代</th></tr></thead><tbody><tr><td>用户</td><td>冻结用例、补练习骨架、运行双路实验、检查退化、写最终判断、闭卷重写</td><td>不能只展示模型调用或挑选成功案例</td></tr><tr><td>ChatGPT</td><td>中文解释、分级提示、报错分析、检查实验公平性、追问失败原因</td><td>不替用户改 expected_ids 或声称效果改善</td></tr><tr><td>Codex</td><td>审查适配器边界、测试覆盖、结果文件结构与回退路径</td><td>不未经理解引入 LangChain / LlamaIndex 等新框架</td></tr></tbody></table></div>
+</section>
+
+<section class="card" id="status"><h2><span class="section-num">07</span>整体 Agent 开发准备进度</h2>
+<div class="callout"><strong>默认执行假设：</strong>W01—W10 当周核心任务已完成，不自动重开历史欠账；W11 尚未计入已完成。阶段门是否通过仍要看代码、测试和可复现证据。</div>
+<div class="two-col"><div class="mini"><h3>本周开始前：32.3%</h3><p>10 / 31 个执行周</p><progress max="31" value="10" aria-label="本周开始前路线进度"></progress></div><div class="mini"><h3>本周完成后：35.5%</h3><p>11 / 31 个执行周（目标）</p><progress max="31" value="11" aria-label="本周完成后目标进度"></progress></div></div>
+<p>百分比 = 默认完成执行周数 ÷ 31；它是路线覆盖率，不是能力分数、实际工时比例或验收通过率。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="路线阶段进度"><table class="task-table"><thead><tr><th>路线阶段</th><th>所需产出</th><th>本周前</th><th>本周后目标</th></tr></thead><tbody>
+<tr><td>W01–W03｜基础启动</td><td>Python / Git 最低可用闭环</td><td>3/3</td><td>3/3</td></tr>
+<tr><td>W04–W07｜前置能力</td><td>LLM API、结构化输出、Agent Loop、FastAPI / RAG 全景</td><td>4/4</td><td>4/4</td></tr>
+<tr><td>W08–W14｜RAG 工程</td><td>Pipeline、Retriever、Vector Store、优化、Evaluation、API、Docker</td><td>3/7</td><td>4/7</td></tr>
+<tr><td>W15–W20｜Agent 深化</td><td>State、Memory、HITL、Trace、Recovery、Agent Evaluation</td><td>0/6</td><td>0/6</td></tr>
+<tr><td>W21–W26｜Evaluation / Pipeline</td><td>Golden Dataset、批处理、校验、重试、并发、Regression</td><td>0/6</td><td>0/6</td></tr>
+<tr><td>W27–W31｜求职准备</td><td>作品集、简历、面试与反馈闭环</td><td>0/5</td><td>0/5</td></tr>
+</tbody></table></div>
+<p><strong>阶段门提醒：</strong>W11 产出的是可比较的检索改进证据；Gate 2 仍需 W12—W14 的固定 Evaluation Set、Answer Evaluation、API、pytest、Logging、Docker、README 与可复现步骤。</p>
+</section>
+
+<footer class="footer">Master Plan V5.8 · 可直接学习教程<p>页面更新：2026-10-28 · <a href="#overview">回到顶部 ↑</a> · <a href="../../index.html">返回总归档</a></p></footer>
+</main>
+</body>
+</html>
