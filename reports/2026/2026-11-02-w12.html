@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>W12 学习教程｜RAG Evaluation</title>
+<link rel="stylesheet" href="../../assets/style.css?v=weekly-20260919">
+<meta name="description" content="W12 可直接学习教程：Golden Set、Retrieval Evaluation、Answer Evaluation、延迟与成本记录、baseline 报告；2026-11-02—11-08，16 小时。">
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a>
+<nav class="page-nav" aria-label="页面章节导航"><div class="page-nav-inner">
+<a class="brand" href="../../index.html">AI 学习<span> / WEEKLY</span></a><div class="nav-links">
+<a href="#summary">本周摘要</a><a href="#priority">任务边界</a><a href="#tutorial">核心教程</a><a href="#resources">资料方法</a><a href="#time">时间安排</a><a href="#acceptance">练习验收</a><a href="#status">整体进度</a>
+</div></div></nav>
+<main class="container" id="main-content">
+<nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="w01.html">W01</a><a href="w02.html">W02</a><a href="w03.html">W03</a><a href="2026-09-07-w04.html">W04</a><a href="2026-09-14-w05.html">W05</a><a href="2026-09-21-w06.html">W06</a><a href="2026-09-28-w07.html">W07</a><a href="2026-10-05-w08.html">W08</a><a href="2026-10-12-w09.html">W09</a><a href="2026-10-19-w10.html">W10</a><a href="2026-10-26-w11.html">W11</a><a href="2026-11-02-w12.html" aria-current="page">W12</a></nav>
+
+<section class="hero" id="overview"><div class="eyebrow">WEEK 12 · 可直接学习教程</div>
+<h1>RAG Evaluation<span class="title-plus"> / </span>让改进有证据</h1>
+<p class="lead">冻结一组小而稳定的 Golden Set，把 W11 的 Retriever 与最小回答链路放进同一评测脚本；分别测“找没找到”和“答得对不对”，同时记录延迟、Token 与估算成本。</p>
+<div class="hero-meta"><span class="chip">本周执行版</span><span class="chip">2026.11.02—11.08</span><span class="chip">标准容量：16 小时</span><span class="chip">Master Plan V5.8</span></div>
+<div class="intro"><div class="hero-note"><small>本期两行概要</small>
+<p>建立含 query、相关 Chunk、参考事实和类别的 Golden Set，手写 Hit@k、Precision@k、Recall@k、MRR，并保留逐条结果。</p>
+<p>用事实覆盖率、引用正确性和人工量表评估回答，记录延迟与成本，生成 baseline 报告；不靠单个总分或主观感觉宣布优化成功。</p>
+</div><div class="calendar"><small>本周交付</small>
+<div><strong>01</strong><span>固定 Golden Set</span></div>
+<div><strong>02</strong><span>Evaluation Script + JSONL</span></div>
+<div><strong>03</strong><span>Baseline 报告与失败分类</span></div>
+</div></div>
+<p class="muted source-note">依据：Master Plan V5.8 的 W12 默认切片。资料与版本于 2026-11-04 核对：本教程不依赖正在弃用的 OpenAI Evals 平台，采用本地、供应商无关的 Python 评测脚本；模型调用字段和价格须以实际供应商当日官方文档为准。</p></section>
+
+<section class="card" id="summary"><h2><span class="section-num">01</span>本周结论摘要</h2>
+<div class="kpis"><div class="kpi"><span>执行周</span><b>W12</b><span>11 月 2—8 日</span></div><div class="kpi"><span>标准容量</span><b>16h</b><span>周末 8h + 8h</span></div><div class="kpi"><span>阶段位置</span><b>RAG 5/7</b><span>可重复评测</span></div><div class="kpi"><span>核心证据</span><b>3 files</b><span>dataset / results / report</span></div></div>
+<div class="callout ok"><strong>一句话目标：</strong>同一套数据、同一套指标、同一套运行参数下，复跑 W10 baseline 与 W11 改进版，明确回答“检索是否更好、回答是否更好、代价增加多少、失败集中在哪里”。</div>
+<p>检索指标与回答指标必须分开。检索命中但回答遗漏，属于生成/上下文使用问题；正确 Chunk 根本没进上下文，则优先修 Retriever。只有分层记录，Debug 才不会盲目改 Prompt。</p>
+</section>
+
+<section class="card" id="priority"><h2><span class="section-num">02</span>任务优先级、掌握程度与边界</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W12 任务表"><table class="task-table"><thead><tr><th>优先级</th><th>任务</th><th>掌握程度</th><th>时长</th></tr></thead><tbody>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-1">评测目标与 Golden Set</a></td><td>L2：每个用例有稳定 ID、查询、相关 Chunk、参考事实与类别。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-2">Retrieval Evaluation</a></td><td>L2：独立实现并解释 Hit@k、Precision@k、Recall@k、MRR。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-3">Answer Evaluation</a></td><td>L2：区分事实覆盖、引用正确性与人工质量判断。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-4">批量执行与结果版本</a></td><td>L2：逐条失败不吞掉整批，输出 JSONL 和运行配置。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-5">Latency / Token / Cost</a></td><td>L2：用单调时钟计时，从响应 usage 读取 Token 并配置价格。</td><td>1.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-6">Baseline 报告与闭卷验收</a></td><td>L2：比较版本、定位失败、给出保留/回退/继续实验结论。</td><td>3h</td></tr>
+</tbody></table></div>
+<div class="two-col"><div class="mini"><h3>P1｜仅在 P0 完成后</h3><ul><li>从真实失败日志补 2—3 条困难用例。</li><li>双人/两轮人工评分，检查量表一致性。</li><li>可尝试 LLM-as-a-Judge，但必须先用人工样本校准，且不作为唯一真值。</li></ul><p class="muted">P1 不额外占用 16h；若 P0 阻塞，全部取消并转为 Debug。</p></div><div class="mini"><h3>P2｜本周明确不做</h3><ul><li>RAGAS、DeepEval 等框架系统课。</li><li>大规模数据集、并发压测与分布式评测。</li><li>Agent Evaluation、Prompt 自动优化。</li><li>W13 的 FastAPI、完整 pytest / Logging 集成。</li><li>用一个“综合分”掩盖逐项失败。</li></ul></div></div>
+<div class="callout warn"><strong>停止点：</strong>10—15 条高质量用例足够建立第一版。先确保每条标注可解释、脚本可复跑、失败可定位，再增加数量。</div>
+</section>
+
+<section class="card" id="tutorial"><h2><span class="section-num">03</span>核心教程正文</h2>
+<nav class="task-jumps" aria-label="任务快捷跳转"><a href="#lesson-1">1. Golden Set</a><a href="#lesson-2">2. 检索指标</a><a href="#lesson-3">3. 回答评测</a><a href="#lesson-4">4. 批量执行</a><a href="#lesson-5">5. 延迟成本</a><a href="#lesson-6">6. 报告验收</a></nav>
+
+<article class="task" id="lesson-1"><div class="task-head"><h3>1｜评测目标与 Golden Set</h3><span class="duration">3h</span></div>
+<p><strong>Golden Set（黄金测试集）</strong>是一组人工确认过输入和期望行为的固定用例。它不是“所有真实问题”，而是当前系统最重要、最容易失败、能稳定复跑的一小组代表。</p>
+<p><strong>为什么要学：</strong>没有固定输入和真值，W10 与 W11 的差异无法公平比较；查询一变、标注一变，分数就失去意义。它也是 W21 更系统的 Golden Dataset 的最小前置。</p>
+<h4>先定义评测契约</h4>
+<pre><code>from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class GoldenCase:
+    case_id: str
+    query: str
+    relevant_chunk_ids: tuple[str, ...]
+    required_facts: tuple[str, ...]
+    category: str
+
+CASES = [
+    GoldenCase(
+        case_id="refund-001",
+        query="退款申请后多久原路退回？",
+        relevant_chunk_ids=("policy-refund-time",),
+        required_facts=("3到5个工作日", "原支付渠道"),
+        category="single-hop",
+    )
+]</code></pre>
+<div class="callout"><strong>字段含义：</strong><code>relevant_chunk_ids</code>回答“应该检索到什么”；<code>required_facts</code>回答“最终回答至少应包含什么”。不要把完整参考答案当作唯一字符串真值，否则措辞变化会被误判。</div>
+<h4>常见错误 → 原因 → 正确写法</h4>
+<ul><li><strong>错误：</strong>只存 query 和一段参考答案。<strong>原因：</strong>无法区分检索失败还是生成失败。<strong>改正：</strong>同时存相关 Chunk ID 与必需事实。</li><li><strong>错误：</strong>用当前系统输出反过来当真值。<strong>原因：</strong>会把已有错误写入标注。<strong>改正：</strong>回看原文，由人确认。</li><li><strong>错误：</strong>每次运行前临时改 expected。<strong>原因：</strong>版本不可比较。<strong>改正：</strong>修改时记录 dataset_version 和理由。</li></ul>
+<div class="task-guide"><h4>练习骨架</h4><pre><code>def validate_case(case: GoldenCase) -> None:
+    # TODO 1: case_id / query 不允许为空
+    # TODO 2: relevant_chunk_ids 不允许重复
+    # TODO 3: required_facts 至少 1 条
+    ...
+
+# 用户先写：构造 10—15 条，至少覆盖
+# single-hop / multi-fact / no-answer / wording-variant</code></pre>
+<p><strong>边界测试：</strong>空 query、重复 ID、无答案问题、多个相关 Chunk、同义改写、答案存在但分散在两段。<strong>完成点：</strong>所有用例通过校验，并能说明每条为何进入测试集。</p></div>
+</article>
+
+<article class="task" id="lesson-2"><div class="task-head"><h3>2｜Retrieval Evaluation：Hit、Precision、Recall、MRR</h3><span class="duration">3h</span></div>
+<p><strong>检索评测（Retrieval Evaluation）</strong>只看返回的 Chunk 排名，不看模型最后怎么组织答案。设前 k 个结果为 retrieved，人工标注的相关集合为 relevant：</p>
+<ul><li><strong>Hit@k：</strong>前 k 个里只要出现至少一个相关 Chunk 就记 1，适合“找到一个证据就够”的场景。</li><li><strong>Precision@k：</strong>前 k 个中相关项占比，衡量上下文有多少噪声。</li><li><strong>Recall@k：</strong>前 k 个找回了全部相关项的多少比例，适合答案分散在多段的场景。</li><li><strong>MRR（Mean Reciprocal Rank，平均倒数排名）：</strong>第一个相关结果越靠前越高；单条为 <code>1 / rank</code>，未命中为 0。</li></ul>
+<pre><code>def retrieval_metrics(
+    retrieved_ids: list[str],
+    relevant_ids: tuple[str, ...],
+    k: int,
+) -> dict[str, float]:
+    if k &lt;= 0:
+        raise ValueError("k must be positive")
+    top_k = retrieved_ids[:k]
+    relevant = set(relevant_ids)
+    if not relevant:
+        raise ValueError("relevant_ids must not be empty")
+
+    matched = [chunk_id for chunk_id in top_k if chunk_id in relevant]
+    first_rank = next(
+        (rank for rank, chunk_id in enumerate(top_k, start=1)
+         if chunk_id in relevant),
+        None,
+    )
+    return {
+        "hit_at_k": float(bool(matched)),
+        "precision_at_k": len(matched) / k,
+        "recall_at_k": len(set(matched)) / len(relevant),
+        "reciprocal_rank": 0.0 if first_rank is None else 1 / first_rank,
+    }</code></pre>
+<div class="callout warn"><strong>指标陷阱：</strong>如果 Retriever 实际只返回 2 条，却用 k=5 计算 <code>len(matched)/5</code>，Precision@5 会包含“未返回位置”的惩罚。先约定系统必须返回 k 条，或明确采用 <code>len(top_k)</code> 作为分母；报告中不可混用。</div>
+<div class="task-guide"><h4>练习骨架与自测</h4><pre><code># TODO: 写 aggregate_metrics(rows)，返回各指标平均值
+# 用 assert 先验证：
+# retrieved=["b", "a", "c"], relevant=("a",), k=3
+# 期望 hit=1, precision=1/3, recall=1, reciprocal_rank=1/2
+
+# 再验证：无命中、多相关项、重复返回 ID、k 大于结果数</code></pre>
+<p><strong>AI 提示顺序：</strong>先只问公式 → 再让 AI 检查一个手算案例 → 最后才让 AI 审查函数。<strong>闭卷要求：</strong>能用纸笔算出一个三结果案例，并解释为什么 Hit@k 不能代替 Recall@k。</p></div>
+</article>
+
+<article class="task" id="lesson-3"><div class="task-head"><h3>3｜Answer Evaluation：事实、引用与人工量表</h3><span class="duration">3h</span></div>
+<p><strong>回答评测（Answer Evaluation）</strong>判断最终答案是否满足任务。开放式中文回答不适合只做 exact match：同一事实可以有多种正确表达。本周采用三层证据：</p>
+<ol><li><strong>事实覆盖率（Fact Coverage）：</strong>必需事实有多少被答案明确包含；第一版用规范化关键词/短语，承认它只是一种近似。</li><li><strong>引用正确性（Citation Correctness）：</strong>回答引用的 Chunk 是否都在实际检索上下文中，且至少包含人工标注相关 Chunk。</li><li><strong>人工量表（Human Rubric）：</strong>对正确性、完整性、忠实性分别给 0/1/2，并写失败原因。</li></ol>
+<pre><code>from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class AnswerScore:
+    fact_coverage: float
+    citations_valid: bool
+    human_correctness: int | None = None
+    failure_note: str | None = None
+
+def fact_coverage(answer: str, required_facts: tuple[str, ...]) -> float:
+    if not required_facts:
+        raise ValueError("required_facts must not be empty")
+    normalized = "".join(answer.lower().split())
+    hits = sum(
+        "".join(fact.lower().split()) in normalized
+        for fact in required_facts
+    )
+    return hits / len(required_facts)
+
+def citations_valid(
+    cited_ids: list[str],
+    retrieved_ids: list[str],
+) -> bool:
+    return bool(cited_ids) and set(cited_ids).issubset(set(retrieved_ids))</code></pre>
+<h4>错误示例</h4><pre><code># 错误：把“关键词全出现”直接等同于答案正确
+passed = fact_coverage(answer, required_facts) == 1.0</code></pre>
+<p><strong>为什么错：</strong>“不是 3 到 5 个工作日”也包含关键词；模型还可能把事实关系说反。正确做法是将自动事实覆盖率作为筛查信号，再对小数据集做人工正确性/忠实性确认。</p>
+<div class="task-guide"><h4>练习骨架</h4><pre><code>def manual_rubric(answer: str, context: str) -> dict[str, int]:
+    # 用户填写，不让模型替你决定真值
+    return {
+        "correctness": ...,   # 0 错 / 1 部分 / 2 对
+        "completeness": ...,  # 0 缺失 / 1 部分 / 2 完整
+        "groundedness": ...,  # 0 无依据 / 1 部分 / 2 有依据
+    }</code></pre>
+<p><strong>边界测试：</strong>正确拒答、事实全对但无引用、引用存在但不支持结论、包含必需词却否定事实、回答冗长且夹带未提供信息。<strong>P1 才考虑：</strong>用 LLM 评分，并先与 5 条人工评分比较一致性。</p></div>
+</article>
+
+<article class="task" id="lesson-4"><div class="task-head"><h3>4｜批量执行、异常隔离与结果版本</h3><span class="duration">2.5h</span></div>
+<p><strong>批量评测（Batch Evaluation）</strong>把每个 GoldenCase 送入同一 RAG Pipeline，并逐条保存输入、配置、检索结果、回答、指标和错误。一个用例失败不能让整批结果消失。</p>
+<pre><code>import json
+from pathlib import Path
+from typing import Callable
+
+def run_case(case: GoldenCase, rag: Callable[[str], dict]) -> dict:
+    try:
+        output = rag(case.query)
+        metrics = retrieval_metrics(
+            output["retrieved_ids"],
+            case.relevant_chunk_ids,
+            k=3,
+        )
+        return {
+            "case_id": case.case_id,
+            "status": "ok",
+            "answer": output["answer"],
+            "retrieved_ids": output["retrieved_ids"],
+            **metrics,
+        }
+    except Exception as exc:
+        return {
+            "case_id": case.case_id,
+            "status": "error",
+            "error_type": type(exc).__name__,
+            "error_message": str(exc),
+        }
+
+def write_jsonl(path: Path, rows: list[dict]) -> None:
+    with path.open("w", encoding="utf-8") as file:
+        for row in rows:
+            file.write(json.dumps(row, ensure_ascii=False) + "\n")</code></pre>
+<div class="callout"><strong>每次运行必须附带：</strong><code>dataset_version</code>、<code>pipeline_version</code>、embedding / generation 模型标识、top_k、是否 rerank、时间戳。否则几天后无法知道两个结果文件为何不同。</div>
+<div class="task-guide"><h4>练习骨架</h4><pre><code>RUN_CONFIG = {
+    "dataset_version": "w12-v1",
+    "pipeline_version": "vector-rerank-v1",
+    "top_k": 3,
+    "rerank": True,
+    # TODO: 加入真实模型标识
+}
+
+# TODO: run_all(cases, rag)：
+# 1. 验证 case_id 唯一
+# 2. 逐条 run_case
+# 3. 写 results.jsonl
+# 4. 汇总成功/失败数，但不丢逐条记录</code></pre>
+<p><strong>Debug：</strong>刻意让第 3 条抛出 TimeoutError，确认第 4 条仍执行；写入包含中文、换行和空答案；重复 case_id 应在运行前失败。<strong>迁移：</strong>先在 <code>experiments/</code> 跑通，再将稳定函数移入 <code>src/evaluation/</code>。</p></div>
+</article>
+
+<article class="task" id="lesson-5"><div class="task-head"><h3>5｜Latency、Token Usage 与 Cost</h3><span class="duration">1.5h</span></div>
+<p><strong>延迟（Latency）</strong>回答“用户等多久”；<strong>Token Usage</strong>回答“本次输入/输出量多大”；<strong>Cost</strong>是基于供应商当前价格的估算。三者必须和质量指标一起看。</p>
+<pre><code>from time import perf_counter
+
+def measured_call(call_model):
+    started = perf_counter()
+    response = call_model()
+    latency_ms = (perf_counter() - started) * 1000
+
+    # 适配实际供应商响应；不要猜字段
+    input_tokens = response.usage.input_tokens
+    output_tokens = response.usage.output_tokens
+    return response, {
+        "latency_ms": round(latency_ms, 1),
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+    }
+
+def estimate_cost(
+    input_tokens: int,
+    output_tokens: int,
+    input_price_per_million: float,
+    output_price_per_million: float,
+) -> float:
+    return (
+        input_tokens * input_price_per_million
+        + output_tokens * output_price_per_million
+    ) / 1_000_000</code></pre>
+<ul><li>用 <code>perf_counter()</code> 计算时间差；不要用墙上时间做短耗时测量。</li><li>价格放配置并记录日期，不要硬编码成“永久价格”。</li><li>分别记录 retrieval、rerank、generation；只记录总耗时会遮住瓶颈。</li><li>至少报告平均值与最大值；样本少时不要伪装成稳定的生产 P95。</li></ul>
+<div class="task-guide"><h4>边界测试</h4><p>缓存命中与未命中、模型调用重试、usage 缺失、免费/本地模型、输入 0 Token、价格配置为负数。若响应没有 usage，写 <code>null</code> 并说明，不可填 0 冒充真实。</p></div>
+</article>
+
+<article class="task" id="lesson-6"><div class="task-head"><h3>6｜Baseline 报告、失败分类与闭卷重写</h3><span class="duration">3h</span></div>
+<p><strong>Baseline Report（基线报告）</strong>不是展示漂亮平均分，而是记录一个可复测版本的表现和限制。最少比较 W10 vector baseline 与 W11 vector + rerank：</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Baseline 报告模板"><table class="task-table"><thead><tr><th>版本</th><th>Hit@3</th><th>Recall@3</th><th>MRR</th><th>答案事实覆盖</th><th>平均延迟</th><th>估算成本</th></tr></thead><tbody><tr><td>vector-baseline</td><td>待运行</td><td>待运行</td><td>待运行</td><td>待人工复核</td><td>待运行</td><td>待配置</td></tr><tr><td>vector-rerank</td><td>待运行</td><td>待运行</td><td>待运行</td><td>待人工复核</td><td>待运行</td><td>待配置</td></tr></tbody></table></div>
+<h4>失败分类</h4><ul><li><strong>dataset：</strong>标注错误、问题歧义、知识库无答案。</li><li><strong>retrieval：</strong>相关 Chunk 未进入 top-k。</li><li><strong>ranking：</strong>相关 Chunk 已召回但排序太低。</li><li><strong>generation：</strong>上下文已有证据，但回答遗漏、误读或幻觉。</li><li><strong>system：</strong>超时、限流、解析失败、空响应。</li></ul>
+<div class="task-guide"><h4>闭卷重写</h4><ol><li>关闭页面，重写 <code>GoldenCase</code> 与 <code>retrieval_metrics()</code>。</li><li>用一个三结果案例手算 Precision@3、Recall@3、RR。</li><li>重写逐条异常隔离的 <code>run_case()</code>。</li><li>画出 Dataset → Pipeline → Per-case Result → Aggregate → Report。</li><li>口述一个“检索命中但答案错误”的 Debug 顺序。</li></ol><p><strong>完成点：</strong>报告必须包含版本配置、逐项指标、至少 3 个失败案例、质量/延迟/成本权衡，以及“保留、回退或继续实验”的明确结论。</p></div>
+</article>
+</section>
+
+<section class="card" id="resources"><h2><span class="section-num">04</span>资料与学习方法</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W12 资料与学习方法"><table class="task-table"><thead><tr><th>资料</th><th>本周只看</th><th>主导方式</th><th>停止点</th></tr></thead><tbody>
+<tr><td><a href="https://developers.openai.com/api/docs/guides/evaluation-best-practices">OpenAI｜Evaluation best practices</a></td><td>目标 → 数据集 → 指标 → 比较；task-specific eval、人审校准与反对 vibe-based eval。</td><td>官方文档主讲</td><td>理解设计原则即停；不使用正在弃用的 Evals API。</td></tr>
+<tr><td><a href="https://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html">scikit-learn｜Precision-Recall</a></td><td>信息检索语境下 precision / recall 的含义与权衡。</td><td>官方文档主讲 + 手算</td><td>能手算本周案例即停，不开机器学习指标系统课。</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/time.html#time.perf_counter">Python｜time.perf_counter</a></td><td>只看短时段测量和“只比较差值”的说明。</td><td>官方文档主讲 + 实验</td><td>能写计时包装器即停。</td></tr>
+<tr><td>W10 / W11 已有代码与实验记录</td><td>冻结 baseline、Retriever 开关、固定查询、排名和延迟。</td><td>实验主导</td><td>不重写 Vector DB / Reranker。</td></tr>
+<tr><td>ChatGPT</td><td>中文解释、手算检查、错误定位、量表审查；先提示后答案。</td><td>AI 主讲 / Debug 辅助</td><td>不让 AI 替你标真值或写最终实验结论。</td></tr>
+</tbody></table></div>
+<div class="callout warn"><strong>输入比例：</strong>资料阅读控制在约 30—35%；其余时间用于建数据、写脚本、运行、人工复核、失败分析和闭卷重写。本周不需要额外视频。</div>
+</section>
+
+<section class="card" id="time"><h2><span class="section-num">05</span>执行顺序与 16h 时间分配</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W12 16 小时时间分配"><table class="task-table"><thead><tr><th>时段</th><th>任务</th><th>内部拆分</th><th>阶段产出</th></tr></thead><tbody>
+<tr><td>周六 09:00—12:00</td><td>Golden Set · 3h</td><td>契约 0.5h；选例/标注 2h；校验 0.5h</td><td>10—15 条 v1 数据</td></tr>
+<tr><td>周六 13:00—16:00</td><td>检索指标 · 3h</td><td>手算 0.5h；实现 1.5h；边界测试 1h</td><td>metrics.py + 自测</td></tr>
+<tr><td>周六 16:00—19:00</td><td>回答评测 · 3h</td><td>量表 0.75h；自动筛查 1h；人工复核 1.25h</td><td>Answer rubric</td></tr>
+<tr><td>周日 09:00—11:30</td><td>批量执行 · 2.5h</td><td>runner 1.5h；异常隔离 0.5h；JSONL 0.5h</td><td>逐条结果文件</td></tr>
+<tr><td>周日 11:30—13:00</td><td>延迟 / Token / Cost · 1.5h</td><td>计时 0.5h；usage 0.5h；价格配置 0.5h</td><td>运行成本字段</td></tr>
+<tr><td>周日 14:00—17:00</td><td>报告与验收 · 3h</td><td>双版本复跑 1h；失败分析 1h；闭卷重写 1h</td><td>baseline report</td></tr>
+<tr><th colspan="3">合计</th><th>16h</th></tr>
+</tbody></table></div>
+<p><strong>周五晚 4—6h（可选、不计入保底）：</strong>只做环境确认、复制 W10/W11 固定查询、建立目录和阅读评测原则；不能用它掩盖周末 P0 未完成。若实际空闲不足，保序压缩：Golden Set → 检索指标 → 批量结果 → 人工回答复核 → 报告；P1 全取消。</p>
+</section>
+
+<section class="card" id="acceptance"><h2><span class="section-num">06</span>练习、产出、验收与分工</h2>
+<h3>本周必须留下的工程证据</h3><ul><li><code>evals/w12_golden_v1.jsonl</code>：10—15 条固定用例与版本说明。</li><li><code>src/evaluation/metrics.py</code>：检索指标、事实覆盖与输入校验。</li><li><code>experiments/run_w12_eval.py</code>：可切换 baseline / rerank 的批量入口。</li><li><code>results/w12_*.jsonl</code>：逐用例输入、结果、指标、延迟、usage 与错误。</li><li><code>reports/w12_baseline.md</code>：汇总表、失败分类、成本权衡与结论。</li></ul>
+<h3>闭卷验收题</h3><ol><li>Golden Set 为什么要同时包含 relevant Chunk 和 required facts？</li><li>Hit@k、Precision@k、Recall@k、MRR 各回答什么问题？</li><li>为什么开放式回答不能只用 exact match？</li><li>关键词全命中为什么仍不能证明答案正确？</li><li>如何判断失败属于 retrieval、ranking 还是 generation？</li><li>为什么结果必须记录 dataset / pipeline / model 版本？</li><li>为什么用 <code>perf_counter()</code> 而不是当前日期时间测短延迟？</li><li>质量上升、延迟和成本也上升时，如何给出工程结论？</li></ol>
+<h3>完成定义</h3><div class="callout ok"><strong>通过：</strong>同一 Golden Set 可运行 baseline 与 rerank；逐条结果可追溯；检索与回答指标分层；至少人工复核 10 条回答；异常不吞掉整批；报告包含至少 3 个失败案例、版本与成本信息；最后能闭卷重写核心指标和批量入口。</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="用户与 AI 分工"><table class="task-table"><thead><tr><th>角色</th><th>负责</th><th>不能替代</th></tr></thead><tbody>
+<tr><td>用户</td><td>确认真值、写练习、运行双版本、人工评分、解释失败、闭卷重写</td><td>不能只看平均分或让模型自己宣布正确</td></tr>
+<tr><td>ChatGPT</td><td>中文讲解、分级提示、手算核对、报错分析、量表一致性检查</td><td>不替用户修改 Golden Set 以迁就输出</td></tr>
+<tr><td>Codex</td><td>审查数据契约、异常隔离、结果版本、指标实现和报告可复现性</td><td>不提前引入评测框架、W13 服务化或 Agent Eval</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="card" id="status"><h2><span class="section-num">07</span>整体 Agent 开发准备进度</h2>
+<div class="callout"><strong>默认执行假设：</strong>W01—W11 当周核心任务已完成，不自动重开历史欠账；W12 尚未计入已完成。阶段门是否通过仍要看代码、测试和可复现证据。</div>
+<div class="two-col"><div class="mini"><h3>本周开始前：35.5%</h3><p>11 / 31 个执行周</p><progress max="31" value="11" aria-label="本周开始前路线进度"></progress></div><div class="mini"><h3>本周完成后：38.7%</h3><p>12 / 31 个执行周（目标）</p><progress max="31" value="12" aria-label="本周完成后目标进度"></progress></div></div>
+<p>百分比 = 默认完成执行周数 ÷ 31；它是路线覆盖率，不是能力分数、实际工时比例或验收通过率。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="路线阶段进度"><table class="task-table"><thead><tr><th>路线阶段</th><th>所需产出</th><th>本周前</th><th>本周后目标</th></tr></thead><tbody>
+<tr><td>W01–W03｜基础启动</td><td>Python / Git 最低可用闭环</td><td>3/3</td><td>3/3</td></tr>
+<tr><td>W04–W07｜前置能力</td><td>LLM API、结构化输出、Agent Loop、FastAPI / RAG 全景</td><td>4/4</td><td>4/4</td></tr>
+<tr><td>W08–W14｜RAG 工程</td><td>Pipeline、Retriever、Vector Store、优化、Evaluation、API、Docker</td><td>4/7</td><td>5/7</td></tr>
+<tr><td>W15–W20｜Agent 深化</td><td>State、Memory、HITL、Trace、Recovery、Agent Evaluation</td><td>0/6</td><td>0/6</td></tr>
+<tr><td>W21–W26｜Evaluation / Pipeline</td><td>Golden Dataset、批处理、校验、重试、并发、Regression</td><td>0/6</td><td>0/6</td></tr>
+<tr><td>W27–W31｜求职准备</td><td>作品集、简历、面试与反馈闭环</td><td>0/5</td><td>0/5</td></tr>
+</tbody></table></div>
+<p><strong>阶段门提醒：</strong>W12 产出 Gate 2 所需的固定 Evaluation Set、Evaluation Script 与 baseline 报告；Gate 2 仍需 W13 的 API / pytest / Logging 和 W14 的 Docker / README / 可复现整合。周数不能自动证明 Gate 已通过。</p>
+</section>
+
+<footer class="footer">Master Plan V5.8 · 可直接学习教程<p>页面更新：2026-11-04 · <a href="#overview">回到顶部 ↑</a> · <a href="../../index.html">返回总归档</a></p></footer>
+</main>
+</body>
+</html>
