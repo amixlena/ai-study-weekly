@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>W13 学习教程｜API + Test + Logging</title>
+<link rel="stylesheet" href="../../assets/style.css?v=weekly-20260919">
+<meta name="description" content="W13 可直接学习教程：FastAPI 集成、Request/Response Schema、错误处理、TestClient、pytest、Logging 与 .env；2026-11-09—11-15，16 小时。">
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a>
+<nav class="page-nav" aria-label="页面章节导航"><div class="page-nav-inner">
+<a class="brand" href="../../index.html">AI 学习<span> / WEEKLY</span></a><div class="nav-links">
+<a href="#summary">本周摘要</a><a href="#priority">任务边界</a><a href="#tutorial">核心教程</a><a href="#resources">资料方法</a><a href="#time">时间安排</a><a href="#acceptance">练习验收</a><a href="#status">整体进度</a>
+</div></div></nav>
+<main class="container" id="main-content">
+<nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="w01.html">W01</a><a href="w02.html">W02</a><a href="w03.html">W03</a><a href="2026-09-07-w04.html">W04</a><a href="2026-09-14-w05.html">W05</a><a href="2026-09-21-w06.html">W06</a><a href="2026-09-28-w07.html">W07</a><a href="2026-10-05-w08.html">W08</a><a href="2026-10-12-w09.html">W09</a><a href="2026-10-19-w10.html">W10</a><a href="2026-10-26-w11.html">W11</a><a href="2026-11-02-w12.html">W12</a><a href="2026-11-09-w13.html" aria-current="page">W13</a></nav>
+
+<section class="hero" id="overview"><div class="eyebrow">WEEK 13 · 可直接学习教程</div>
+<h1>API + Test + Logging<span class="title-plus"> / </span>把 RAG 变成可靠服务</h1>
+<p class="lead">把 W08—W12 已有的 RAG Pipeline 封装成边界清晰的 FastAPI 服务：请求和响应可校验、外部失败能映射为稳定 HTTP 错误、测试不调用真实模型、日志足以定位一次请求。</p>
+<div class="hero-meta"><span class="chip">本周执行版</span><span class="chip">2026.11.09—11.15</span><span class="chip">标准容量：16 小时</span><span class="chip">Master Plan V5.8</span></div>
+<div class="intro"><div class="hero-note"><small>本期两行概要</small>
+<p>用 Pydantic Request / Response Schema 与依赖注入封装 <code>POST /query</code>，把 RAG Pipeline 与 HTTP 层分开。</p>
+<p>用 TestClient、dependency override、异常测试、request_id 日志和 .env 配置建立可复跑的服务证据，测试期间不访问真实模型或数据库。</p>
+</div><div class="calendar"><small>本周交付</small>
+<div><strong>01</strong><span>可调用 RAG API</span></div>
+<div><strong>02</strong><span>正常 + 异常测试</span></div>
+<div><strong>03</strong><span>基础日志与配置</span></div>
+</div></div>
+<p class="muted source-note">依据：Master Plan V5.8 的 W13 默认切片。版本敏感写法于 2026-11-11 对照 FastAPI、Pydantic Settings、pytest 与 Python Logging 官方文档；实际依赖版本以项目锁文件为准。</p></section>
+
+<section class="card" id="summary"><h2><span class="section-num">01</span>本周结论摘要</h2>
+<div class="kpis"><div class="kpi"><span>执行周</span><b>W13</b><span>11 月 9—15 日</span></div><div class="kpi"><span>标准容量</span><b>16h</b><span>周末 8h + 8h</span></div><div class="kpi"><span>阶段位置</span><b>RAG 6/7</b><span>服务可靠性</span></div><div class="kpi"><span>核心证据</span><b>API</b><span>tests + logs + config</span></div></div>
+<div class="callout ok"><strong>一句话目标：</strong>客户端只需提交稳定 JSON 就能调用 RAG；输入错误返回 422，业务不存在返回 404，依赖故障返回 503；测试可完全替换真实 Pipeline，日志可用 request_id 串起请求与结果。</div>
+<p>本周不是“再学一遍 FastAPI”，而是把已经能运行的 RAG 逻辑放到 HTTP 边界后面。Route 只负责输入、调用和输出；检索、生成、评测仍留在各自模块。</p>
+</section>
+
+<section class="card" id="priority"><h2><span class="section-num">02</span>任务优先级、掌握程度与边界</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W13 任务表"><table class="task-table"><thead><tr><th>优先级</th><th>任务</th><th>掌握程度</th><th>时长</th></tr></thead><tbody>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-1">服务边界与 Schema</a></td><td>L2：独立定义 POST Route、Request / Response Model 与基础校验。</td><td>3h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-2">依赖注入与 RAG 集成</a></td><td>L2：Route 不直接创建数据库/模型；可替换 Service。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-3">Exception 与 Status Code</a></td><td>L2：区分 4xx / 5xx，错误响应稳定且不泄露内部信息。</td><td>2.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-4">TestClient + pytest</a></td><td>L2—L3：覆盖正常、422、404、503，并证明未调用真实依赖。</td><td>3.5h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-5">基础 Logging + request_id</a></td><td>L2：按级别记录事件，异常保留堆栈，不记录密钥与原始上下文。</td><td>2h</td></tr>
+<tr><td><span class="tag p0">P0</span></td><td><a href="#lesson-6">Settings / .env + 综合验收</a></td><td>L2：配置可验证、测试可覆盖，完成闭卷重写。</td><td>2.5h</td></tr>
+</tbody></table></div>
+<div class="two-col"><div class="mini"><h3>P1｜P0 后再做</h3><ul><li><code>/health</code> 区分进程存活与依赖就绪。</li><li>用 pytest <code>caplog</code> 断言关键日志。</li><li>给响应加基础延迟和模型版本字段。</li></ul><p class="muted">P1 不额外占 16h；任何 P0 阻塞时直接转为 Debug。</p></div><div class="mini"><h3>P2｜本周明确不做</h3><ul><li>Docker、部署平台、CI/CD、完整 README（W14）。</li><li>异步数据库改造、并发压测、微服务治理。</li><li>Prometheus / OpenTelemetry / ELK 等可观测性栈。</li><li>认证授权、限流、缓存与前端。</li><li>为了框架重写 W08—W12 Pipeline。</li></ul></div></div>
+<div class="callout warn"><strong>停止点：</strong>一个 <code>POST /query</code>、一个可替换的 Service、四类结果路径、基础日志和配置足够。接口数量不代表工程能力。</div>
+</section>
+
+<section class="card" id="tutorial"><h2><span class="section-num">03</span>核心教程正文</h2>
+<nav class="task-jumps" aria-label="任务快捷跳转"><a href="#lesson-1">1. Schema</a><a href="#lesson-2">2. 依赖注入</a><a href="#lesson-3">3. 异常状态码</a><a href="#lesson-4">4. API 测试</a><a href="#lesson-5">5. 日志</a><a href="#lesson-6">6. 配置验收</a></nav>
+
+<article class="task" id="lesson-1"><div class="task-head"><h3>1｜服务边界与 Request / Response Schema</h3><span class="duration">3h</span></div>
+<p><strong>API（Application Programming Interface，应用程序接口）</strong>是调用方与 RAG 服务之间的契约。HTTP 层应该稳定，即使内部 Retriever、Reranker 或模型以后替换，客户端也不必跟着重写。</p>
+<p><strong>为什么要学：</strong>Agent、Web UI、批量评测和其他后端都需要通过明确输入输出调用同一能力。Schema 同时承担文档、校验和回归边界。</p>
+<h4>最小目录</h4><pre><code>src/
+  api/
+    main.py
+    schemas.py
+    dependencies.py
+  rag/
+    service.py
+tests/
+  test_query_api.py
+.env.example</code></pre>
+<h4>最小但完整的 Schema</h4><pre><code># src/api/schemas.py
+from pydantic import BaseModel, Field
+
+class QueryRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=1000)
+    top_k: int = Field(default=3, ge=1, le=10)
+
+class SourceItem(BaseModel):
+    chunk_id: str
+    text_preview: str
+    score: float | None = None
+
+class QueryResponse(BaseModel):
+    answer: str
+    sources: list[SourceItem]
+    request_id: str</code></pre>
+<p><strong>设计理由：</strong><code>question</code> 限长避免空输入和意外超长请求；<code>top_k</code> 限制资源范围；响应返回来源 ID 便于调试与评测，但只给必要 preview，不暴露整库内容。</p>
+<h4>错误示例 → 报错 → 正确写法</h4><pre><code># 错误：Route 收 dict，再手动猜字段
+@app.post("/query")
+def query(payload: dict):
+    question = payload["question"]  # 可能 KeyError</code></pre>
+<p>使用 <code>QueryRequest</code> 后，FastAPI 会在进入业务逻辑前返回结构化 422；不要把输入错误伪装成 500。</p>
+<div class="task-guide"><h4>练习骨架</h4><pre><code>@app.post("/query", response_model=QueryResponse)
+def query_rag(payload: QueryRequest):
+    # TODO：暂时返回固定响应，先确认契约
+    ...</code></pre><p><strong>先写再问：</strong>先自己补一个固定响应；再用 <code>/docs</code> 和 curl 验证。边界：空字符串、1001 字符、top_k=0/11、缺字段、额外字段。完成点：能解释 422 为什么发生。</p></div>
+</article>
+
+<article class="task" id="lesson-2"><div class="task-head"><h3>2｜Dependency Injection 与 RAG Service</h3><span class="duration">2.5h</span></div>
+<p><strong>依赖注入（Dependency Injection）</strong>让 Route 声明“需要一个 RAG Service”，而不是在函数里直接连接数据库和创建模型。这样测试可以替换 Service，也避免每个请求重复加载昂贵资源。</p>
+<pre><code># src/rag/service.py
+from dataclasses import dataclass
+from typing import Protocol
+
+@dataclass(frozen=True)
+class RAGResult:
+    answer: str
+    sources: list[dict]
+
+class RAGService(Protocol):
+    def answer(self, question: str, top_k: int) -> RAGResult: ...
+
+# src/api/dependencies.py
+def get_rag_service() -> RAGService:
+    # 返回应用启动时创建或缓存的真实实现
+    return real_rag_service</code></pre>
+<pre><code># src/api/main.py
+from typing import Annotated
+from fastapi import Depends, FastAPI
+
+app = FastAPI(title="RAG Service")
+
+@app.post("/query", response_model=QueryResponse)
+def query_rag(
+    payload: QueryRequest,
+    service: Annotated[RAGService, Depends(get_rag_service)],
+) -> QueryResponse:
+    result = service.answer(payload.question, payload.top_k)
+    return QueryResponse(
+        answer=result.answer,
+        sources=[SourceItem(**item) for item in result.sources],
+        request_id="temporary",
+    )</code></pre>
+<div class="callout"><strong>关于 def / async def：</strong>如果当前 PostgreSQL / 模型 SDK 是同步阻塞调用，先用普通 <code>def</code> Route；不要只为“看起来现代”改成 <code>async def</code> 后仍直接执行阻塞代码。本周不做异步重构。</div>
+<div class="task-guide"><h4>练习骨架</h4><p>把 W11/W12 的真实 Pipeline 包成一个实现 <code>answer()</code> 的类；Route 中不得出现 SQL、Embedding、Prompt 或供应商 SDK。刻意替换一个 <code>FakeRAGService</code>，确认接口仍可用。</p><p><strong>边界测试：</strong>空 sources、多个 sources、score 为 null、Service 返回非法字典。非法内部结果应在开发/测试暴露，不要静默补字段。</p></div>
+</article>
+
+<article class="task" id="lesson-3"><div class="task-head"><h3>3｜Exception、Status Code 与安全错误响应</h3><span class="duration">2.5h</span></div>
+<p><strong>状态码（Status Code）</strong>告诉调用方结果类别：2xx 成功；4xx 是请求或业务条件不满足；5xx 是服务端或依赖失败。错误响应要稳定，但不能回传 SQL、密钥、内部路径或模型原始异常。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="错误映射"><table class="task-table"><thead><tr><th>场景</th><th>状态码</th><th>理由</th></tr></thead><tbody><tr><td>Schema 不合法</td><td>422</td><td>FastAPI 自动校验，业务函数不应执行</td></tr><tr><td>知识库无可用答案</td><td>404</td><td>资源/答案不存在，不是系统崩溃</td></tr><tr><td>向量库或模型暂时不可用</td><td>503</td><td>依赖故障，可稍后重试</td></tr><tr><td>未预期异常</td><td>500</td><td>对外统一消息，对内记录堆栈</td></tr></tbody></table></div>
+<pre><code>from fastapi import HTTPException
+
+class KnowledgeBaseUnavailable(RuntimeError):
+    pass
+
+@app.post("/query", response_model=QueryResponse)
+def query_rag(
+    payload: QueryRequest,
+    service: Annotated[RAGService, Depends(get_rag_service)],
+):
+    try:
+        result = service.answer(payload.question, payload.top_k)
+    except KnowledgeBaseUnavailable:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "DEPENDENCY_UNAVAILABLE",
+                    "message": "knowledge service unavailable"},
+        )
+    if not result.answer:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "ANSWER_NOT_FOUND",
+                    "message": "no answer found"},
+        )
+    return build_response(result)</code></pre>
+<h4>常见错误</h4><ul><li><code>except Exception: return {"error": ...}</code> 仍返回 200，调用方会误判成功。</li><li>把 <code>str(exc)</code> 原样返回，可能泄露连接串、SQL 和内部路径。</li><li>所有失败都返回 500，导致无法区分是否应修请求、重试或报警。</li><li>吞掉异常但不写日志，之后无法定位。</li></ul>
+<div class="task-guide"><h4>练习骨架</h4><p>让 Fake Service 分别返回正常、空答案和抛出 <code>KnowledgeBaseUnavailable</code>；记录预期状态码和 JSON。再制造一个未预期 <code>ValueError</code>，观察测试环境的异常行为；对外 500 处理放在统一 handler，避免每个 Route 复制。</p></div>
+</article>
+
+<article class="task" id="lesson-4"><div class="task-head"><h3>4｜TestClient、pytest 与 Dependency Override</h3><span class="duration">3.5h</span></div>
+<p><strong>API 测试</strong>验证 HTTP 契约，不需要真的启动端口。FastAPI 的 <code>TestClient</code> 基于 HTTPX，可在普通 pytest <code>def test_...</code> 中调用。</p>
+<pre><code># tests/test_query_api.py
+import pytest
+from fastapi.testclient import TestClient
+from src.api.main import app
+from src.api.dependencies import get_rag_service
+from src.rag.service import RAGResult
+
+class FakeRAGService:
+    def answer(self, question: str, top_k: int) -> RAGResult:
+        return RAGResult(
+            answer="退款将在 3 到 5 个工作日内原路退回。",
+            sources=[{"chunk_id": "refund-1",
+                      "text_preview": "退款时效...",
+                      "score": 0.91}],
+        )
+
+@pytest.fixture
+def client():
+    app.dependency_overrides[get_rag_service] = lambda: FakeRAGService()
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides = {}
+
+def test_query_success(client: TestClient):
+    response = client.post("/query", json={
+        "question": "退款多久到账？",
+        "top_k": 3,
+    })
+    assert response.status_code == 200
+    body = response.json()
+    assert "3 到 5 个工作日" in body["answer"]
+    assert body["sources"][0]["chunk_id"] == "refund-1"
+    assert body["request_id"]</code></pre>
+<h4>错误路径测试骨架</h4><pre><code>def test_query_rejects_empty_question(client):
+    response = client.post("/query", json={"question": "", "top_k": 3})
+    assert response.status_code == 422
+
+# TODO：Fake 返回空答案 → 404
+# TODO：Fake 抛 KnowledgeBaseUnavailable → 503
+# TODO：top_k=0 / 11 → 422
+# TODO：断言错误 code，而不只断言状态码</code></pre>
+<div class="callout warn"><strong>测试隔离：</strong>fixture 结束必须清空 <code>app.dependency_overrides</code>，否则后续测试会被污染。测试运行时不得访问真实向量库、真实模型或付费 API；可另外保留少量显式 integration test，但不属于本周 P0。</div>
+<div class="task-guide"><h4>Debug 顺序</h4><ol><li>先看状态码与 <code>response.text</code>。</li><li>确认 override 的 key 是原依赖函数本身。</li><li>确认 Fake 返回结构满足内部契约。</li><li>单独运行失败测试：<code>pytest -q tests/test_query_api.py -k 503</code>。</li><li>最后才怀疑 FastAPI 或 pytest。</li></ol><p><strong>完成点：</strong>至少 1 个正常 + 4 个异常/边界测试；重复运行结果稳定，网络断开也能通过。</p></div>
+</article>
+
+<article class="task" id="lesson-5"><div class="task-head"><h3>5｜基础 Logging 与 request_id</h3><span class="duration">2h</span></div>
+<p><strong>日志（Logging）</strong>记录运行事件；<strong>request_id（请求标识）</strong>把一次请求经过的 API、Retriever、模型和错误串起来。日志不是把所有变量都打印出来，而是留下定位所需的最小事实。</p>
+<pre><code>import logging
+from time import perf_counter
+from uuid import uuid4
+from fastapi import Request
+
+logger = logging.getLogger(__name__)
+
+@app.middleware("http")
+async def request_context(request: Request, call_next):
+    request_id = str(uuid4())
+    started = perf_counter()
+    try:
+        response = await call_next(request)
+        return response
+    except Exception:
+        logger.exception("request_failed request_id=%s path=%s",
+                         request_id, request.url.path)
+        raise
+    finally:
+        elapsed_ms = (perf_counter() - started) * 1000
+        logger.info("request_finished request_id=%s path=%s elapsed_ms=%.1f",
+                    request_id, request.url.path, elapsed_ms)</code></pre>
+<p>实际 Route 可从 <code>request.state</code> 读取 request_id 并写入响应。为保持示例短小，练习中补上 <code>request.state.request_id = request_id</code> 与响应 Header。</p>
+<h4>级别与隐私</h4><ul><li><strong>INFO：</strong>请求完成、状态码、耗时、top_k、返回来源数量。</li><li><strong>WARNING：</strong>可恢复退化，如 rerank 回退到 baseline。</li><li><strong>ERROR / exception：</strong>请求失败，保留堆栈但对外隐藏内部信息。</li><li><strong>不要记录：</strong>API Key、Authorization Header、数据库连接串、完整文档、完整 Prompt、公开页面禁止的私人数据。</li></ul>
+<div class="task-guide"><h4>练习骨架</h4><p>把 request_id 放入 <code>request.state</code>、响应 JSON 和 <code>X-Request-ID</code>；用 <code>caplog</code> 检查成功请求有 INFO，失败请求有 ERROR。避免断言完整日志字符串，只断言事件名、级别和 request_id 存在。</p></div>
+</article>
+
+<article class="task" id="lesson-6"><div class="task-head"><h3>6｜Settings、.env 与综合闭卷验收</h3><span class="duration">2.5h</span></div>
+<p><strong>配置（Configuration）</strong>是环境可变而代码不应硬编码的值，例如数据库地址、模型名、日志级别。<code>pydantic-settings</code> 可以从环境变量和 dotenv 读取并校验类型。</p>
+<pre><code># src/config.py
+from functools import lru_cache
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+    app_env: str = "dev"
+    log_level: str = "INFO"
+    database_url: str
+    model_name: str
+    api_key: str = Field(repr=False)
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()</code></pre>
+<pre><code># .env.example（可以提交）
+APP_ENV=dev
+LOG_LEVEL=INFO
+DATABASE_URL=postgresql://user:password@localhost:5432/rag
+MODEL_NAME=replace-me
+API_KEY=replace-me
+
+# .gitignore（真实 .env 不提交）
+.env</code></pre>
+<div class="callout"><strong>优先级：</strong>真实环境变量通常应覆盖 dotenv；<code>.env</code> 是本地便利，不是秘密管理系统。测试通过 dependency override 提供 Settings，不修改开发机真实环境。</div>
+<h4>常见错误</h4><ul><li>从任意工作目录运行时找不到相对路径 <code>.env</code>；需要明确运行目录或路径策略。</li><li>把真实密钥写进 <code>.env.example</code>、测试快照或日志。</li><li>导入模块时立即创建全局客户端，导致测试还没 override 就连外部服务。</li><li>配置缺失时静默使用危险默认值；关键连接与密钥应让启动明确失败。</li></ul>
+<div class="task-guide"><h4>闭卷重写</h4><ol><li>关闭页面，写出 Request / Response Model 与 <code>POST /query</code>。</li><li>用依赖注入接入一个 Fake Service，再写成功测试。</li><li>补 422、404、503 三条异常测试。</li><li>解释 request_id 如何经过日志、响应 Header 与 JSON。</li><li>从空目录写 <code>Settings</code>、<code>.env.example</code> 与 <code>.gitignore</code>。</li></ol><p><strong>完成点：</strong>本地可启动；<code>pytest -q</code> 离线通过；错误不泄露内部异常；日志能定位请求；真实密钥未进入 Git。</p></div>
+</article>
+</section>
+
+<section class="card" id="resources"><h2><span class="section-num">04</span>资料与学习方法</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W13 资料与学习方法"><table class="task-table"><thead><tr><th>资料</th><th>本周只看</th><th>主导方式</th><th>停止点</th></tr></thead><tbody>
+<tr><td><a href="https://fastapi.tiangolo.com/tutorial/testing/">FastAPI｜Testing</a></td><td>TestClient、普通 pytest 函数、状态码和 JSON 断言。</td><td>官方文档主讲 + 实验</td><td>能写正常/异常 API 测试即停。</td></tr>
+<tr><td><a href="https://fastapi.tiangolo.com/advanced/testing-dependencies/">FastAPI｜Dependency Overrides</a></td><td><code>app.dependency_overrides</code> 与测试后清理。</td><td>官方文档主讲</td><td>Fake Service 可替换真实依赖即停。</td></tr>
+<tr><td><a href="https://fastapi.tiangolo.com/advanced/settings/">FastAPI｜Settings</a> / <a href="https://docs.pydantic.dev/latest/concepts/pydantic_settings/">Pydantic Settings</a></td><td>BaseSettings、dotenv、缓存和测试覆盖。</td><td>官方文档主讲</td><td>配置可校验且密钥不进仓库即停。</td></tr>
+<tr><td><a href="https://docs.python.org/3/howto/logging.html">Python｜Logging HOWTO</a></td><td><code>getLogger(__name__)</code>、级别、参数化消息与 exception。</td><td>官方文档主讲 + Debug</td><td>能记录正常和异常路径即停。</td></tr>
+<tr><td><a href="https://docs.pytest.org/en/stable/how-to/logging.html">pytest｜caplog</a></td><td>只在 P1 看日志捕获和级别断言。</td><td>实验主导</td><td>不展开 pytest 高级 fixture 系统课。</td></tr>
+<tr><td>W08—W12 已有项目代码</td><td>复用 Pipeline、Retriever、Evaluation；只加服务边界。</td><td>项目实验主导</td><td>不重写已有模块。</td></tr>
+<tr><td>ChatGPT / Codex</td><td>先解释与提示，再检查 Schema、测试隔离、日志泄露和错误映射。</td><td>AI 辅助</td><td>不替用户写完所有测试或声称 Gate 通过。</td></tr>
+</tbody></table></div>
+<div class="callout warn"><strong>输入比例：</strong>资料与讲解控制在约 35%；其余时间用于接口实现、测试、故意制造错误、日志检查和闭卷重写。本周无需额外视频。</div>
+</section>
+
+<section class="card" id="time"><h2><span class="section-num">05</span>执行顺序与 16h 时间分配</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="W13 16 小时时间分配"><table class="task-table"><thead><tr><th>时段</th><th>任务</th><th>内部拆分</th><th>阶段产出</th></tr></thead><tbody>
+<tr><td>周六 09:00—12:00</td><td>API 契约 · 3h</td><td>结构/HTTP JIT 0.5h；Schema 1h；固定响应 Route 1h；边界 0.5h</td><td>POST /query 契约</td></tr>
+<tr><td>周六 13:00—15:30</td><td>依赖注入 · 2.5h</td><td>Protocol 0.5h；真实适配 1h；Fake 替换 1h</td><td>可替换 RAG Service</td></tr>
+<tr><td>周六 15:30—18:00</td><td>异常处理 · 2.5h</td><td>状态码 0.5h；404/503 1h；500/泄露测试 1h</td><td>稳定错误响应</td></tr>
+<tr><td>周日 09:00—12:30</td><td>TestClient / pytest · 3.5h</td><td>fixture 0.75h；正常 0.75h；异常 1h；边界/隔离 1h</td><td>离线 API 测试</td></tr>
+<tr><td>周日 13:30—15:30</td><td>Logging · 2h</td><td>request_id 0.75h；级别/异常 0.75h；隐私检查 0.5h</td><td>可关联基础日志</td></tr>
+<tr><td>周日 15:30—18:00</td><td>Settings + 验收 · 2.5h</td><td>.env 0.75h；整合 0.75h；闭卷 1h</td><td>可复跑服务证据</td></tr>
+<tr><th colspan="3">合计</th><th>16h</th></tr>
+</tbody></table></div>
+<p><strong>周五晚 4—6h（可选、不计入保底）：</strong>只用于确认依赖、创建目录、备份当前 Pipeline、阅读 Testing/Settings 页面。时间不足时优先保留：Schema → 依赖注入 → 成功/422/503 测试 → 安全日志 → 配置；P1 全取消。</p>
+</section>
+
+<section class="card" id="acceptance"><h2><span class="section-num">06</span>练习、产出、验收与分工</h2>
+<h3>本周必须留下的工程证据</h3><ul><li><code>src/api/main.py</code>、<code>schemas.py</code>、<code>dependencies.py</code>：可调用服务边界。</li><li><code>src/config.py</code>、<code>.env.example</code>、<code>.gitignore</code>：可验证配置且无真实密钥。</li><li><code>tests/test_query_api.py</code>：正常、422、404、503 与边界测试。</li><li>一段成功请求与失败请求日志，能用 request_id 关联且不含敏感内容。</li><li><code>notes/w13-api-contract.md</code>：状态码表、启动/测试命令与已知限制。</li></ul>
+<h3>闭卷验收题</h3><ol><li>为什么 Route 中不应直接创建数据库和模型客户端？</li><li>Request Schema、Response Schema 分别保护谁？</li><li>422、404、503、500 应在什么场景使用？</li><li>dependency override 为什么能避免真实付费调用？结束后为何要清理？</li><li>测试为什么除了状态码还要断言 JSON 契约？</li><li><code>logger.exception</code> 与把异常原文返回客户端有什么区别？</li><li>request_id 如何帮助定位一次跨模块请求？</li><li>为什么 <code>.env.example</code> 可以提交、真实 <code>.env</code> 不应提交？</li></ol>
+<h3>完成定义</h3><div class="callout ok"><strong>通过：</strong>API 可启动并返回符合 Schema 的响应；正常与至少四个异常/边界测试离线稳定通过；测试不会调用真实外部服务；错误响应不泄露内部信息；日志含 request_id、事件与耗时；配置缺失能明确失败；核心 Route 和测试可闭卷重写。</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="用户与 AI 分工"><table class="task-table"><thead><tr><th>角色</th><th>负责</th><th>不能替代</th></tr></thead><tbody>
+<tr><td>用户</td><td>定义接口、补练习、运行测试、制造错误、检查日志、闭卷重写</td><td>不能只打开 /docs 或复制完整工程代码</td></tr>
+<tr><td>ChatGPT</td><td>中文讲解、分级提示、报错分析、HTTP 状态码与测试用例检查</td><td>不替用户连接真实密钥或宣布测试代表生产可靠</td></tr>
+<tr><td>Codex</td><td>审查模块边界、依赖覆盖、异常映射、日志泄露、配置与测试证据</td><td>不提前做 Docker、部署、复杂异步或观测平台</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="card" id="status"><h2><span class="section-num">07</span>整体 Agent 开发准备进度</h2>
+<div class="callout"><strong>默认执行假设：</strong>W01—W12 当周核心任务已完成，不自动重开历史欠账；W13 尚未计入已完成。阶段门是否通过仍要看代码、测试与可复现证据。</div>
+<div class="two-col"><div class="mini"><h3>本周开始前：38.7%</h3><p>12 / 31 个执行周</p><progress max="31" value="12" aria-label="本周开始前路线进度"></progress></div><div class="mini"><h3>本周完成后：41.9%</h3><p>13 / 31 个执行周（目标）</p><progress max="31" value="13" aria-label="本周完成后目标进度"></progress></div></div>
+<p>百分比 = 默认完成执行周数 ÷ 31；它是路线覆盖率，不是能力分数、实际工时比例或验收通过率。</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="路线阶段进度"><table class="task-table"><thead><tr><th>路线阶段</th><th>所需产出</th><th>本周前</th><th>本周后目标</th></tr></thead><tbody>
+<tr><td>W01–W03｜基础启动</td><td>Python / Git 最低可用闭环</td><td>3/3</td><td>3/3</td></tr>
+<tr><td>W04–W07｜前置能力</td><td>LLM API、结构化输出、Agent Loop、FastAPI / RAG 全景</td><td>4/4</td><td>4/4</td></tr>
+<tr><td>W08–W14｜RAG 工程</td><td>Pipeline、Retriever、Vector Store、优化、Evaluation、API、Docker</td><td>5/7</td><td>6/7</td></tr>
+<tr><td>W15–W20｜Agent 深化</td><td>State、Memory、HITL、Trace、Recovery、Agent Evaluation</td><td>0/6</td><td>0/6</td></tr>
+<tr><td>W21–W26｜Evaluation / Pipeline</td><td>Golden Dataset、批处理、校验、重试、并发、Regression</td><td>0/6</td><td>0/6</td></tr>
+<tr><td>W27–W31｜求职准备</td><td>作品集、简历、面试与反馈闭环</td><td>0/5</td><td>0/5</td></tr>
+</tbody></table></div>
+<p><strong>阶段门提醒：</strong>W13 补齐 Gate 2 的 API、测试、错误处理、日志与配置证据；还需 W14 的 Docker、README、架构图、评测对比和清晰复现步骤，才能依据证据判断 RAG 项目门是否通过。</p>
+</section>
+
+<footer class="footer">Master Plan V5.8 · 可直接学习教程<p>页面更新：2026-11-11 · <a href="#overview">回到顶部 ↑</a> · <a href="../../index.html">返回总归档</a></p></footer>
+</main>
+</body>
+</html>
