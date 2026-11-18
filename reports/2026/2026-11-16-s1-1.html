@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>S1-1｜Python / Git / uv / pytest 查漏 + LLM API</title>
+<link rel="stylesheet" href="../../assets/style.css?v=weekly-20260919">
+<meta name="description" content="V6.0 S1-1 可直接学习教程：Python 基础诊断、Git/uv/pytest 最小工程闭环、LLM API Messages、usage 与错误实验。">
+<meta name="color-scheme" content="light">
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a>
+<nav class="page-nav" aria-label="页面章节导航"><div class="page-nav-inner">
+<a class="brand" href="../../index.html">AI 学习<span> / S1-1</span></a>
+<div class="nav-links"><a href="#overview">结论</a><a href="#tasks">任务</a><a href="#tutorial">核心教程</a><a href="#resources">资料</a><a href="#time">时间</a><a href="#acceptance">验收</a><a href="#status">真实进度</a></div>
+</div></nav>
+<main class="container" id="main-content">
+<nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="2026-11-09-w13.html">旧路线 W13</a><a aria-current="page" href="2026-11-16-s1-1.html">V6.0 · S1-1</a><a href="../../index.html">总归档</a></nav>
+
+<header class="hero" id="overview">
+<div class="eyebrow">V6.0 · S1 恢复与 GATE 1 复验</div>
+<h1>S1-1｜Python / Git / uv / pytest 查漏<br><span class="title-plus">+ LLM API、usage 与错误实验</span></h1>
+<p class="lead">本切片不是继续旧站点的 W14，而是回到尚未验收的 Gate 1：用一个小而真实的模型 API 项目，重新证明 Python 基础、依赖管理、测试、版本记录和 API 错误处理能够独立运行。</p>
+<div class="hero-meta"><span class="chip">执行建议：2026.11.16—11.22</span><span class="chip">正常档：8–10h</span><span class="chip">维持档：4h</span><span class="chip">加速档：12–16h</span><span class="chip">权威计划：V6.0</span></div>
+<div class="intro"><div class="hero-note"><small>这周真正要交付什么</small><p>一个不含 Key、可以从空环境复现的 <code>llm_api_demo</code>：含 Python 数据处理函数、pytest、真实 Messages 调用、usage 记录和至少一个可解释的 API 错误案例。</p><p>教材发布不等于学会。没有用户确认或代码、测试、运行记录，本切片始终标记为“未证实”。</p></div><div class="calendar"><small>S1 三个执行切片</small><div class="current"><strong>S1-1</strong><span>Python 工程恢复 + LLM API</span></div><div><strong>S1-2</strong><span>Pydantic / Structured Output / 两个 Tool</span></div><div><strong>S1-3</strong><span>Agent Loop / FastAPI / RAG 全景</span></div></div></div>
+</header>
+
+<section class="card" id="tasks"><h2><span class="section-num">01</span>任务、优先级与掌握程度</h2>
+<div class="callout warn"><strong>当前状态：</strong>S1 / Gate 1 待复验。旧 W04—W13 HTML 是教材记录，不是学习完成证据；本期不自动承认任何旧 Gate 已通过。</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="S1-1 任务表"><table class="task-table"><thead><tr><th>优先级</th><th>任务</th><th>目标程度</th><th>可验证完成标准</th></tr></thead><tbody>
+<tr><td><span class="badge p0">P0</span></td><td>Python：list / dict、函数、模块、异常、类型注解诊断</td><td>L2：能独立读、改、写、Debug</td><td>完成消息清洗函数；正常与非法输入均有测试；能解释每个变量和返回值</td></tr>
+<tr><td><span class="badge p0">P0</span></td><td>Git + uv + pytest 最小工程闭环</td><td>L2：独立操作</td><td>从项目初始化到依赖、测试、diff、commit、log 可复现；不提交 <code>.env</code></td></tr>
+<tr><td><span class="badge p0">P0</span></td><td>LLM API Messages、文本输出、usage、错误</td><td>L2：会调用、观察、定位</td><td>至少一次真实成功调用和一次故意错误；记录输入/输出 Token、异常类型和修复</td></tr>
+<tr><td><span class="badge p1">P1</span></td><td>Temperature / streaming 对照；更多边界测试</td><td>L1–L2</td><td>只有 P0 稳定后再做；资源不足直接取消</td></tr>
+<tr><td><span class="badge p2">P2</span></td><td>高级类型系统、复杂打包、异步并发、SDK 深入封装</td><td>本期不学</td><td>不形成历史欠账</td></tr>
+</tbody></table></div>
+<p><strong>明确不学：</strong>Agent 框架、Structured Output、Tool Calling、RAG、FastAPI、Docker、模型训练、Attention 数学推导。它们属于后续切片；这周只建立能继续学习的工程底座。</p>
+<nav class="task-jumps" aria-label="任务快捷跳转"><a href="#lesson-1">Python 数据形态</a><a href="#lesson-2">函数 / 模块 / 异常</a><a href="#lesson-3">uv / Git</a><a href="#lesson-4">pytest</a><a href="#lesson-5">LLM API</a><a href="#lesson-6">usage / error</a></nav>
+</section>
+
+<section class="card" id="tutorial"><h2><span class="section-num">02</span>核心教程正文</h2>
+
+<article class="task" id="lesson-1"><div class="task-head"><h3>1｜list / dict 与 Messages 的真实数据形态</h3><span class="duration">正常档 1.25h</span></div>
+<p><strong>列表（list）</strong>保存有顺序的一组元素；<strong>字典（dictionary，dict）</strong>用 key 找 value。模型的 Messages 可以理解为“外层 list 装多条消息，每条消息是一个 dict”。这不是抽象语法题：Structured Output、Tool Calling、日志和评测数据都反复使用同样的嵌套结构。</p>
+<pre><code>messages = [
+    {"role": "system", "content": "请用一句中文回答。"},
+    {"role": "user", "content": "什么是 token？"},
+]
+
+first_message = messages[0]
+role = first_message["role"]
+content = first_message["content"]
+
+print(role)      # system
+print(content)   # 请用一句中文回答。</code></pre>
+<p><code>messages</code> 是外层 list，有两个元素；<code>messages[0]</code> 取第一条消息并赋给 <code>first_message</code>；它是 dict，包含 <code>role</code> 和 <code>content</code> 两个 key。<code>first_message["role"]</code> 读取角色值。key 拼错会抛 <code>KeyError</code>，索引越界会抛 <code>IndexError</code>。</p>
+<div class="task-guide"><h4>练习骨架</h4><pre><code>def count_roles(messages: list[dict[str, str]]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for message in messages:
+        # TODO 1：读取当前 message 的 role
+        # TODO 2：让该 role 的计数 +1；第一次出现时从 0 开始
+        ...
+    return counts</code></pre><p><strong>Hint 1：</strong><code>dict.get(key, 0)</code> 可提供默认值。<strong>Hint 2：</strong>先手算示例的期望结果，再运行测试。不要把完整答案粘到练习旁。</p></div>
+</article>
+
+<article class="task" id="lesson-2"><div class="task-head"><h3>2｜函数、模块、类型注解与异常边界</h3><span class="duration">正常档 1.25h</span></div>
+<p><strong>函数（function）</strong>把输入、处理和输出组成可复用单元；<strong>模块（module）</strong>通常就是一个可导入的 <code>.py</code> 文件；<strong>类型注解（type hint）</strong>帮助人和工具理解预期类型，但 Python 运行时不会自动替你校验。异常用于让非法输入显式失败，不要静默返回似是而非的数据。</p>
+<pre><code># src/llm_api_demo/messages.py
+ALLOWED_ROLES = {"system", "user", "assistant"}
+
+def normalize_messages(
+    raw_messages: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    if not raw_messages:
+        raise ValueError("messages must not be empty")
+
+    normalized: list[dict[str, str]] = []
+    for index, message in enumerate(raw_messages):
+        role = message.get("role", "")
+        content = message.get("content", "").strip()
+        if role not in ALLOWED_ROLES:
+            raise ValueError(f"invalid role at index {index}: {role!r}")
+        if not content:
+            raise ValueError(f"empty content at index {index}")
+        normalized.append({"role": role, "content": content})
+    return normalized</code></pre>
+<p><code>raw_messages</code> 是调用者传入的原始 list；<code>normalized</code> 是新 list，避免直接修改输入；<code>enumerate</code> 同时给出索引 <code>index</code> 和当前字典 <code>message</code>；<code>.get()</code> 在 key 缺失时返回默认空字符串；<code>.strip()</code> 去掉首尾空白；<code>raise ValueError</code> 把错误位置交给调用者处理。</p>
+<h4>错误示例 → 原因 → 正确方向</h4><div class="table-wrap" role="region" tabindex="0" aria-label="Python 常见错误"><table class="task-table"><thead><tr><th>错误写法或现象</th><th>原因</th><th>正确方向</th></tr></thead><tbody><tr><td><code>except Exception: pass</code></td><td>异常被吞掉，程序继续使用无效状态</td><td>只捕获能处理的异常；其余保留 traceback</td></tr><tr><td>类型注解写了 <code>str</code> 就认为运行时会拒绝 int</td><td>注解默认不做运行校验</td><td>在输入边界显式检查；后续再用 Pydantic</td></tr><tr><td>模块导入时立即发送 API 请求</td><td>导入产生外部副作用，测试困难</td><td>把调用放入函数和 <code>main()</code></td></tr></tbody></table></div>
+</article>
+
+<article class="task" id="lesson-3"><div class="task-head"><h3>3｜uv 项目与 Git 最小可复现闭环</h3><span class="duration">正常档 1.5h</span></div>
+<p><strong>uv</strong>负责项目环境、依赖与锁文件；<strong>Git</strong>记录代码变化。<code>pyproject.toml</code>声明依赖范围，<code>uv.lock</code>保存解析后的精确版本，两者都应进入版本控制；<code>.venv</code>、真实 <code>.env</code> 和缓存不应提交。</p>
+<pre><code># 初始化并进入项目
+uv init --package llm-api-demo
+cd llm-api-demo
+
+# 运行依赖和开发依赖
+uv add openai
+uv add --dev pytest
+
+# 在项目环境中运行
+uv run python -m llm_api_demo.llm_api
+uv run pytest -q
+
+# 查看并提交明确的文件
+git status
+git diff
+git add pyproject.toml uv.lock src tests .gitignore README.md
+git diff --staged
+git commit -m "build S1-1 LLM API demo"
+git log --oneline -3</code></pre>
+<p><code>uv run</code>会在项目环境中执行命令，并检查锁文件与环境是否同步。不要把 <code>git add .</code> 当作默认操作；先看 <code>status</code> 和 <code>diff</code>，明确确认没有 Key、<code>.env</code>、日志或私人数据。</p>
+<pre><code># .gitignore
+.venv/
+.env
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# .env.example（只写占位值）
+OPENAI_API_KEY=replace-me
+OPENAI_MODEL=replace-with-an-available-model</code></pre>
+<div class="callout"><strong>检查点：</strong>删除 <code>.venv</code> 后执行 <code>uv sync</code>、<code>uv run pytest -q</code> 仍可恢复；<code>git status --short</code> 不出现真实 <code>.env</code>。</div>
+</article>
+
+<article class="task" id="lesson-4"><div class="task-head"><h3>4｜pytest：把正常与错误路径写成证据</h3><span class="duration">正常档 1.5h</span></div>
+<p><strong>测试（test）</strong>不是证明“代码永远正确”，而是把预期行为变成可重复检查。S1-1 只需要普通测试函数、<code>assert</code> 和 <code>pytest.raises</code>；复杂 fixture、参数化与覆盖率工具不是 P0。</p>
+<pre><code># tests/test_messages.py
+import pytest
+from llm_api_demo.messages import normalize_messages
+
+def test_normalize_messages_strips_content():
+    raw = [{"role": "user", "content": "  hello  "}]
+    assert normalize_messages(raw) == [
+        {"role": "user", "content": "hello"}
+    ]
+
+def test_normalize_messages_rejects_empty_list():
+    with pytest.raises(ValueError, match="must not be empty"):
+        normalize_messages([])
+
+def test_normalize_messages_rejects_invalid_role():
+    raw = [{"role": "admin", "content": "hello"}]
+    with pytest.raises(ValueError, match="invalid role"):
+        normalize_messages(raw)
+
+# TODO：补 content 只有空格
+# TODO：补缺少 role
+# TODO：确认函数没有修改 raw</code></pre>
+<p>第一个测试准备输入、调用函数并比较完整输出；后两个测试确认指定错误确实发生。若测试失败，先读失败位置、实际值和 traceback，再只运行一个测试：<code>uv run pytest -q tests/test_messages.py -k invalid_role</code>。</p>
+</article>
+
+<article class="task" id="lesson-5"><div class="task-head"><h3>5｜真实 LLM API Messages 调用</h3><span class="duration">正常档 2.5h</span></div>
+<p><strong>模型 API（Model API）</strong>是程序与模型服务之间的接口。程序负责读取环境变量、构造 Messages、发送请求、处理返回值与异常；模型只生成响应，不替 Python 执行本地函数。示例使用当前官方 Responses API；可用模型名必须以账户实际可用列表和供应商文档为准，不在教程中硬编码。</p>
+<pre><code># src/llm_api_demo/llm_api.py
+import os
+from openai import OpenAI
+from llm_api_demo.messages import normalize_messages
+
+def create_demo_response(prompt: str):
+    model = os.environ["OPENAI_MODEL"]
+    messages = normalize_messages([
+        {"role": "system", "content": "用两句中文回答；不确定就明确说不确定。"},
+        {"role": "user", "content": prompt},
+    ])
+    client = OpenAI()
+    return client.responses.create(model=model, input=messages)
+
+def main() -> None:
+    response = create_demo_response("Token usage 为什么需要记录？")
+    print(response.output_text)
+    print({
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens,
+        "total_tokens": response.usage.total_tokens,
+    })
+
+if __name__ == "__main__":
+    main()</code></pre>
+<p><code>os.environ["OPENAI_MODEL"]</code>读取必须存在的环境变量，缺失时抛 <code>KeyError</code>，比悄悄选择未知模型更诚实；<code>OpenAI()</code>默认从环境读取 Key；<code>input=messages</code>传入角色化消息；<code>response.output_text</code>取得聚合文本；<code>response.usage</code>提供本次调用的 Token 统计。真实 Key 只放本地环境或未提交的 <code>.env</code>。</p>
+<div class="task-guide"><h4>先写再求助</h4><ol><li>先自己把固定问题改成命令行输入或函数参数。</li><li>先运行，记录成功输出和 usage；不要把 Key 或完整私人输入放进截图/日志。</li><li>若报错，先复制“异常类型 + 状态码 + request id + 最小上下文”，再让 AI 分析。</li><li>修复后重跑，并记录“原错误—原因—改动—结果”。</li></ol></div>
+</article>
+
+<article class="task" id="lesson-6"><div class="task-head"><h3>6｜usage、API Error 与边界实验</h3><span class="duration">正常档 1h（含验收）</span></div>
+<p><strong>usage</strong>是调用的资源记录，用于估算成本、发现意外长输入和比较版本；<strong>API error</strong>要按类型判断是修配置、修请求、等待重试还是检查网络。不要用一个空泛的 <code>except Exception</code> 把所有原因变成同一句“调用失败”。</p>
+<pre><code>from openai import (
+    APIConnectionError,
+    APIStatusError,
+    AuthenticationError,
+    RateLimitError,
+)
+
+try:
+    response = create_demo_response("请解释 system message 的作用。")
+except AuthenticationError as exc:
+    print("认证失败：检查 Key，但不要打印 Key。", exc.request_id)
+except RateLimitError as exc:
+    print("触发限流：记录 request_id，稍后重试。", exc.request_id)
+except APIConnectionError:
+    print("连接失败：检查网络、代理与超时。")
+except APIStatusError as exc:
+    print("服务返回非 2xx：", exc.status_code, exc.request_id)
+else:
+    print(response.output_text)</code></pre>
+<h4>故意错误实验</h4><ol><li>把 <code>OPENAI_MODEL</code> 临时设为明显不存在的值，运行一次并记录异常类型、状态码和 request id；随后恢复正确模型。</li><li>在不泄露 Key 的前提下，记录修复前后命令与结果。</li><li>若当前没有可用 Key，只能完成本地函数、mock 与测试，真实成功调用和服务端错误必须标为<strong>待验收</strong>，不能假装完成。</li></ol>
+<div class="callout ok"><strong>S1-1 完成点：</strong>代码可从新环境恢复；pytest 通过；真实调用成功；usage 有记录；至少一个错误被复现、解释和修复；Git 提交不含秘密；关闭教程能重新写出核心函数和调用流程。</div>
+</article>
+</section>
+
+<section class="card" id="resources"><h2><span class="section-num">03</span>资料、学习方法与停止点</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="S1-1 资料表"><table class="task-table"><thead><tr><th>资料</th><th>只学什么</th><th>方法</th><th>停止点</th></tr></thead><tbody>
+<tr><td><a href="https://docs.python.org/3/tutorial/errors.html">Python｜Errors and Exceptions</a></td><td>读 traceback、<code>try/except</code>、只捕获能处理的异常</td><td>官方文档 + 故意报错</td><td>能定位并解释 3 类错误即停</td></tr>
+<tr><td><a href="https://docs.python.org/3/library/typing.html">Python｜typing</a></td><td>函数参数、返回值、<code>list[dict[str,str]]</code>；理解运行时不自动校验</td><td>AI 先讲 + 修改示例</td><td>能给本期函数加清晰注解即停</td></tr>
+<tr><td><a href="https://docs.astral.sh/uv/guides/projects/">uv｜Working on projects</a></td><td><code>uv init/add/run/sync</code>、<code>pyproject.toml</code>、<code>uv.lock</code></td><td>官方文档 + 从空目录实践</td><td>删环境可恢复即停</td></tr>
+<tr><td><a href="https://docs.pytest.org/en/stable/getting-started.html">pytest｜Get Started</a></td><td>普通测试、assert、失败报告；<code>pytest.raises</code>按页面链接补</td><td>实验主导</td><td>至少 1 正常 + 3 错误/边界测试即停</td></tr>
+<tr><td><a href="https://git-scm.com/docs/giteveryday">Git｜Everyday Git</a></td><td><code>status/diff/add/commit/log</code>；只提交明确文件</td><td>边写边提交</td><td>能解释一次提交包含什么即停</td></tr>
+<tr><td><a href="https://developers.openai.com/api/reference/resources/responses/methods/create">OpenAI｜Create a response</a></td><td><code>model</code>、Messages 输入、文本与 usage 输出</td><td>官方文档 + 真实最小调用</td><td>成功调用并能解释输入输出即停</td></tr>
+<tr><td><a href="https://developers.openai.com/api/docs/guides/error-codes">OpenAI｜Error codes</a></td><td>认证、限流、连接、非 2xx 错误的处理差异</td><td>故意错误 + Debug 记录</td><td>复现并修复 1 个错误即停</td></tr>
+<tr><td>ChatGPT / Codex</td><td>中文解释、分层 Hint、报错归因、测试与泄密检查</td><td>用户先写 → AI 提示 → 用户修改 → AI 复核</td><td>AI 不替用户完成闭卷重写</td></tr>
+</tbody></table></div>
+<p><strong>主导顺序：</strong>先运行最小项目，再按实际报错查文档；资料输入控制在正常档约 35%，其余时间用于写代码、测试、错误实验和闭卷重写。没有明确需要时不额外找视频。</p>
+</section>
+
+<section class="card" id="time"><h2><span class="section-num">04</span>执行顺序与三档时间分配</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="三档学习时间"><table class="task-table"><thead><tr><th>档位</th><th>总时长</th><th>执行分配</th><th>允许取消</th></tr></thead><tbody>
+<tr><td>维持版</td><td>4h</td><td>项目/uv/Git 0.75h；消息函数+测试 1h；真实 API+usage 1.5h；错误记录+提交 0.75h</td><td>Temperature、streaming、额外理论全部取消</td></tr>
+<tr><td><strong>正常版</strong></td><td><strong>9h</strong></td><td>Python 数据/函数/异常 2.5h；uv/Git 1.5h；pytest 1.5h；真实 API 2.5h；错误实验与验收 1h</td><td>P1 可取消；P0 卡点把时间转为 Debug</td></tr>
+<tr><td>加速版</td><td>14h</td><td>先完成正常版 9h；Temperature/streaming 2h；更多边界与 mock 1.5h；从空目录闭卷重建 1.5h</td><td>不得用多余框架填时间</td></tr>
+</tbody></table></div>
+<p><strong>正常版建议顺序：</strong>周六先完成 Python + uv/Git + 第一批测试（约 5h）；周日完成真实 API、usage、错误实验和闭卷验收（约 4h）。周一至周四不设刚性任务，周五只作可选环境准备。</p>
+</section>
+
+<section class="card" id="acceptance"><h2><span class="section-num">05</span>代码练习、验收与分工</h2>
+<h3>必须留下的证据</h3><ul><li><code>pyproject.toml</code>、<code>uv.lock</code>、<code>.gitignore</code>、<code>.env.example</code>。</li><li><code>src/llm_api_demo/messages.py</code> 与 <code>llm_api.py</code>。</li><li><code>tests/test_messages.py</code>：正常、空输入、非法角色、空内容等。</li><li><code>notes/s1-1-experiments.md</code>：成功调用、usage、故意错误、原因、修复和闭卷结果；不含 Key 与私人输入。</li><li>至少一个清晰 Git commit；<code>uv sync</code> 后测试可复跑。</li></ul>
+<h3>分层 Hint 规则</h3><ol><li><strong>Hint 1：</strong>只指出错误所在的概念或文件，不给代码。</li><li><strong>Hint 2：</strong>指出要检查的变量、输入形态或官方文档小节。</li><li><strong>Hint 3：</strong>给 3—8 行局部骨架，保留核心 TODO。</li><li><strong>最后：</strong>用户完成后 AI 才审查完整代码、异常路径与泄密风险。</li></ol>
+<h3>闭卷验收题</h3><ol><li>画出 <code>list[dict[str,str]]</code> 的实际层级，并解释循环中 <code>message</code> 是什么。</li><li>类型注解为什么不能替代运行时校验？</li><li>为什么 <code>raise ValueError</code> 比静默返回空 list 更适合输入边界？</li><li><code>pyproject.toml</code>、<code>uv.lock</code>、<code>.venv</code> 分别是什么，哪些应提交？</li><li>pytest 如何确认一个错误“应该发生”？</li><li>system 与 user Message 各承担什么角色？</li><li>usage 中 input/output/total Token 分别表示什么，为什么要记录？</li><li>认证失败、限流、连接失败、非 2xx 为什么不能用同一处理策略？</li></ol>
+<div class="table-wrap" role="region" tabindex="0" aria-label="分工表"><table class="task-table"><thead><tr><th>角色</th><th>负责</th><th>不能替代</th></tr></thead><tbody><tr><td>用户</td><td>创建项目、补 TODO、运行真实调用、制造错误、写实验记录、闭卷重建</td><td>不能只阅读教程或复制完整答案</td></tr><tr><td>ChatGPT</td><td>中文解释、分层 Hint、traceback 与 API 错误分析、逐段提问</td><td>不能声称未运行代码已通过</td></tr><tr><td>Codex</td><td>检查目录、类型与异常边界、测试质量、Git diff、秘密泄露与复现步骤</td><td>不能代替用户完成真实 Key 调用和独立重写</td></tr></tbody></table></div>
+</section>
+
+<section class="card" id="status"><h2><span class="section-num">06</span>真实进度：发布、验收、作品集分开看</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="V6.0 真实进度"><table class="task-table"><thead><tr><th>进度维度</th><th>当前状态</th><th>本切片完成后可更新为</th><th>判定证据</th></tr></thead><tbody>
+<tr><td>教材发布进度</td><td>旧路线 W01—W13 已归档；S1-1 本期已生成</td><td>教材可供执行</td><td>HTML 可访问；仅代表“材料已发布”</td></tr>
+<tr><td><strong>真实已验收进度</strong></td><td><strong>S1 / Gate 1 待复验；S1-1 未证实</strong></td><td>S1-1 P0 已验收；仍未自动通过 Gate 1</td><td>用户确认 + 仓库代码、测试、真实调用和错误记录</td></tr>
+<tr><td>作品集进度</td><td>项目 A V1/V2、项目 B MVP 均无足够公开闭环证据</td><td>本期只形成 Gate 1 基础证据，不算项目 A V1</td><td>README、可复现代码、测试、评测与运行结果</td></tr>
+</tbody></table></div>
+<div class="callout"><strong>推进规则：</strong>若本期没有新证据，下次继续 S1-1 的未验收 P0，不因日期进入 S1-2。只有用户明确确认，或可验证代码、测试和运行结果支持，才更新真实完成状态。</div>
+<h3>V6.0 阶段路线</h3><div class="table-wrap" role="region" tabindex="0" aria-label="V6.0 阶段路线"><table class="task-table"><thead><tr><th>阶段</th><th>目标</th><th>当前判定</th></tr></thead><tbody><tr><td>S1｜恢复与 Gate 1</td><td>LLM API、Structured Output、两 Tool + Loop、FastAPI Demo、RAG 全景</td><td>进行中；Gate 1 待复验</td></tr><tr><td>S2｜RAG 项目 V1</td><td>Document → Retrieval → Answer → Eval → API/Test/Docker</td><td>未进入</td></tr><tr><td>S3｜Agent 工程整合</td><td>Tool + RAG、State、Trace、恢复、HITL、Agent Eval</td><td>未进入</td></tr><tr><td>S4｜Evaluation / Pipeline</td><td>Golden、Batch、Validation、Version、Retry、Regression、Report</td><td>未进入</td></tr><tr><td>S5/S6｜作品集与求职反馈</td><td>简历、项目叙事、投递、面试与 JD 补强</td><td>未进入</td></tr></tbody></table></div>
+</section>
+
+<footer class="footer">V6.0 · S1 / Gate 1 待复验 · 可直接学习教程<p>页面更新：2026-11-18 · <a href="#overview">回到顶部 ↑</a> · <a href="../../index.html">返回总归档</a></p></footer>
+</main>
+</body>
+</html>
