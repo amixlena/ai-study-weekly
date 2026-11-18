@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI 学习周计划解读归档</title>
+<title>AI 学习教程归档</title>
 <link rel="stylesheet" href="assets/style.css?v=weekly-20260919">
-<meta name="description" content="AI 学习教程 W01–W13：逐项任务、核心教程、代码练习、16 小时安排与验收。当前执行 W13：API + Test + Logging。">
+<meta name="description" content="AI 应用工程 / Agent 工程学习教程归档。当前按 V6.0 执行 S1-1：Python/Git/uv/pytest 查漏与 LLM API、usage、错误实验。">
 <meta name="color-scheme" content="light">
 </head>
 <body>
@@ -13,11 +13,11 @@
 <a class="brand" href="index.html">AI 学习<span> / WEEKLY</span></a><div class="nav-links">
 <a href="#overview">首页概览</a><a href="#current">本周执行</a><a href="#archive">全部周报</a><a href="#format">使用方式</a><a href="#status">整体进度</a>
 </div>
-</div></nav><main class="container" id="main-content"><nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="reports/2026/w01.html">W01</a><a href="reports/2026/w02.html">W02</a><a href="reports/2026/w03.html">W03</a><a href="reports/2026/2026-09-07-w04.html">W04</a><a href="reports/2026/2026-09-14-w05.html">W05</a><a href="reports/2026/2026-09-21-w06.html">W06</a><a href="reports/2026/2026-09-28-w07.html">W07</a><a href="reports/2026/2026-10-05-w08.html">W08</a><a href="reports/2026/2026-10-12-w09.html">W09</a><a href="reports/2026/2026-10-19-w10.html">W10</a><a href="reports/2026/2026-10-26-w11.html">W11</a><a href="reports/2026/2026-11-02-w12.html">W12</a><a href="reports/2026/2026-11-09-w13.html">W13</a></nav><section class="hero" id="overview"><div class="eyebrow">AI ENGINEERING · WEEKLY STUDY BRIEF</div>
+</div></nav><main class="container" id="main-content"><nav class="week-strip" aria-label="切换学习周"><span>学习归档</span><a href="reports/2026/w01.html">W01</a><a href="reports/2026/w02.html">W02</a><a href="reports/2026/w03.html">W03</a><a href="reports/2026/2026-09-07-w04.html">W04</a><a href="reports/2026/2026-09-14-w05.html">W05</a><a href="reports/2026/2026-09-21-w06.html">W06</a><a href="reports/2026/2026-09-28-w07.html">W07</a><a href="reports/2026/2026-10-05-w08.html">W08</a><a href="reports/2026/2026-10-12-w09.html">W09</a><a href="reports/2026/2026-10-19-w10.html">W10</a><a href="reports/2026/2026-10-26-w11.html">W11</a><a href="reports/2026/2026-11-02-w12.html">W12</a><a href="reports/2026/2026-11-09-w13.html">W13</a><a aria-current="page" href="reports/2026/2026-11-16-s1-1.html">S1-1</a></nav><section class="hero" id="overview"><div class="eyebrow">AI ENGINEERING · WEEKLY STUDY BRIEF</div>
 <h1>每周一小步，<br>把知识变成能运行的代码。</h1>
 <p class="lead">AI 应用工程 / Agent 工程学习归档。每周明确学什么、怎么学、做到什么程度，再用代码和验收留下证据。</p>
 <div class="hero-meta">
-<span class="chip">W01–W13 · 13 期教程 / 解读</span><span class="chip">标准容量：每周 16h</span><span class="chip">Master Plan V5.8</span><span class="chip">更新：2026.11.11</span>
+<span class="chip">旧路线 W01–W13 + V6.0 S1-1</span><span class="chip">正常容量：8–10h</span><span class="chip">维持 4h / 加速 12–16h</span><span class="chip">当前计划：V6.0</span><span class="chip">更新：2026.11.18</span>
 </div>
 <div class="intro">
 <div class="hero-note">
@@ -25,32 +25,36 @@
 <p>先自己写，运行和 Debug，再闭卷解释；路线进度始终放在每期最后。</p>
 </div>
 <div class="calendar">
-<small>执行周历 · 当前路线锚点</small><div>
-<strong>W11</strong><span>10/26–11/01 · Retrieval 优化与 Rerank</span>
-</div>
-<div>
-<strong>W12</strong><span>11/02–11/08 · RAG Evaluation</span>
-</div>
-<div class="current">
-<strong>W13</strong><span>11/09–11/15 · API + Test + Logging</span>
-</div>
+<small>V6.0 · 当前真实路线锚点</small><div class="current"><strong>S1-1</strong><span>Python 工程恢复 + LLM API</span></div><div><strong>S1-2</strong><span>Structured Output + 两个 Tool</span></div><div><strong>S1-3</strong><span>Agent Loop + FastAPI + RAG 全景</span></div>
 </div>
 </div></section><section class="card" id="current"><h2>
-<span class="section-num">01</span>本周执行</h2>
-<p class="muted">截至 2026-11-11，当前执行周为 W13，执行周期为 11 月 9 日—11 月 15 日；W12 已归档。</p>
+<span class="section-num">01</span>当前执行切片</h2>
+<p class="muted">截至 2026-11-18，V6.0 的真实进度锚点为 S1 / Gate 1 待复验；首个待学切片仍是 S1-1。旧站点已发布到 W13，不等于用户已经学习或验收到 W13。</p>
 <div class="two-col">
-<article class="feature-week"><span class="badge history">上周归档 · 11 月 2 日—11 月 8 日</span><p class="week-code">W12</p>
-<h3>RAG Evaluation</h3>
-<p>建立 Golden Set，分层评估检索与回答，记录延迟、Token 和成本，并生成可复跑的 baseline 报告。</p>
-<a class="button secondary" href="reports/2026/2026-11-02-w12.html">查看 W12 →</a></article><article class="feature-week current"><span class="badge current">本周 · 11 月 9 日—11 月 15 日</span><p class="week-code">W13</p>
+<article class="feature-week"><span class="badge history">历史教材 · 不计入真实完成</span><p class="week-code">W13</p>
 <h3>API + Test + Logging</h3>
-<p>把 RAG Pipeline 封装成 FastAPI 服务，用依赖覆盖完成离线测试，并补齐错误处理、request_id 日志和 .env 配置。</p>
-<a class="button" href="reports/2026/2026-11-09-w13.html">打开本周教程 →</a></article>
+<p>旧 V5.8 路线的历史教材继续保留，可按需查阅，但不作为 Gate 通过证据。</p>
+<a class="button secondary" href="reports/2026/2026-11-09-w13.html">查看历史 W13 →</a></article>
+<article class="feature-week current"><span class="badge current">当前切片 · 11 月 16 日—11 月 22 日</span><p class="week-code">S1-1</p>
+<h3>Python / Git / uv / pytest 查漏 + LLM API</h3>
+<p>用一个最小可复现项目诊断 Python 工程基础，完成真实 Messages 调用、usage 记录和 API 错误实验。</p>
+<a class="button" href="reports/2026/2026-11-16-s1-1.html">打开 S1-1 教程 →</a></article>
 </div>
-<div class="callout">
-<strong>历史内容说明：</strong>W01–W03 在 V5.8 中只保留“基础启动”的阶段结论，归档中的三期为历史重建版。未虚构原始逐周计划或精确执行日期。</div></section><section class="card" id="archive"><h2>
+<div class="callout"><strong>V6.0 推进规则：</strong>教材发布 ≠ 用户已学会。没有用户确认或可验证代码、测试和运行记录，下次仍强化当前未验收 P0，不按日期自动推进。</div></section><section class="card" id="archive"><h2>
 <span class="section-num">02</span>全部学习教程 / 解读</h2>
 <ul class="archive-list">
+<li>
+<div class="archive-week">S1-1</div>
+<div class="archive-body">
+<div class="archive-title">
+<a href="reports/2026/2026-11-16-s1-1.html">Python / Git / uv / pytest 查漏 + LLM API</a><span class="badge current">V6.0 当前切片</span>
+</div>
+<div class="summary-lines">
+<span>用 Messages 数据结构、函数、模块、异常和类型注解完成 Python 诊断，并以 uv、pytest、Git 留下可复现工程证据。</span>
+<span>完成一次真实模型调用、usage 记录和故意错误实验；没有 Key 或运行证据时明确标记待验收。</span>
+</div>
+</div>
+</li>
 <li>
 <div class="archive-week">W13</div>
 <div class="archive-body">
@@ -207,71 +211,27 @@
 </div>
 <div>
 <span>03 / 留下证据</span><h3>运行、解释、独立修改</h3>
-<p>按 16h 安排执行，完成验收；最后再看 31 周路线与阶段门。</p>
+<p>按 4h / 8–10h / 12–16h 三档执行，完成验收；最后分开看教材、能力与作品集进度。</p>
 </div>
 </div></section><section class="card" id="status"><h2>
-<span class="section-num">04</span>整体 Agent 开发准备进度 · 以 W13 为当前周</h2>
-<div class="callout">
-<strong>默认执行假设：</strong>默认 W01–W12 的当周核心任务已完成，不自动重开历史欠账。只有你明确反馈未完成项时才调整；W13 尚未计入已完成。</div>
-<div class="two-col">
-<div class="mini">
-<h3>本周开始前：38.7%</h3>
-<p>12 / 31 个执行周</p>
-<progress max="31" value="12" aria-label="本周开始前路线进度"></progress>
-</div>
-<div class="mini">
-<h3>本周完成后：41.9%</h3>
-<p>13 / 31 个执行周（目标）</p>
-<progress max="31" value="13" aria-label="本周完成后目标进度"></progress>
-</div>
-</div>
-<p>百分比 = 按默认假设完成的执行周数 ÷ 31。它表示整个 Agent 开发与求职准备路线的覆盖进度；各周难度并不相同，因此不代表能力分数、实际工时占比或已通过验收的比例。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="表格 1，窄屏可横向滚动"><table class="task-table">
-<tr>
-<th scope="col">路线阶段</th>
-<th scope="col">最终要形成的能力 / 证据</th>
-<th scope="col">本周前默认覆盖</th>
-<th scope="col">本周后目标覆盖</th>
-</tr>
-<tr>
-<td>W01–W03｜基础启动</td>
-<td>Python / Git 最低可用闭环</td>
-<td>3/3</td>
-<td>3/3</td>
-</tr>
-<tr>
-<td>W04–W07｜LLM / Agent 前置能力</td>
-<td>LLM API、结构化输出、Tool Calling、Agent Loop、FastAPI / RAG 全景</td>
-<td>4/4</td>
-<td>4/4</td>
-</tr>
-<tr>
-<td>W08–W14｜RAG 工程项目</td>
-<td>文档 Pipeline、检索、评测、API、测试、日志、部署</td>
-<td>5/7</td>
-<td>6/7</td>
-</tr>
-<tr>
-<td>W15–W20｜Agent 工程深化</td>
-<td>状态、记忆、人工介入、恢复、Agent 评测</td>
-<td>0/6</td>
-<td>0/6</td>
-</tr>
-<tr>
-<td>W21–W26｜Evaluation / Data Pipeline</td>
-<td>数据集、批量评测、校验、重试与并发</td>
-<td>0/6</td>
-<td>0/6</td>
-</tr>
-<tr>
-<td>W27–W31｜求职准备与补强</td>
-<td>作品集、简历、技术面试与反馈闭环</td>
-<td>0/5</td>
-<td>0/5</td>
-</tr>
+<span class="section-num">04</span>真实进度 · 教材、能力与作品集分开</h2>
+<div class="callout warn"><strong>当前结论：</strong>S1 / Gate 1 待复验，S1-1 未证实。旧 W01—W13 页面属于历史教材，不再用“已发布 N/31”推断真实学习完成率。</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="V6.0 真实进度"><table class="task-table">
+<tr><th scope="col">维度</th><th scope="col">当前状态</th><th scope="col">如何更新</th></tr>
+<tr><td>教材发布进度</td><td>旧路线 W01—W13 保留；V6.0 S1-1 已新增</td><td>HTML 可访问只代表教材已准备</td></tr>
+<tr><td><strong>真实已验收进度</strong></td><td><strong>S1 / Gate 1 待复验；S1-1 未证实</strong></td><td>用户明确确认，或代码、测试、真实调用记录可验证</td></tr>
+<tr><td>作品集进度</td><td>项目 A V1/V2、项目 B MVP 均无足够公开闭环证据</td><td>以 README、可复现代码、测试、评测和运行结果更新</td></tr>
 </table></div>
-<p><strong>能力验收另看阶段门：</strong>W13 正在补齐 API、测试、错误处理、日志与配置证据；后续仍需 W14 的 Docker、README、架构图、评测对比与复现步骤，才能依据证据复核 RAG 项目门。阶段门是否通过仍需代码、测试、部署或评测结果，不能由周数自动推定。</p>
-<p><strong>偏差处理：</strong>默认无历史阻塞项；若你反馈未完成，只有阻塞后续的 P0 必须补，非阻塞 P1 可月内滚动，P2 与重复资料可取消。Type Hint、uv 等继续按真实需求 JIT 补齐。</p></section><footer class="footer">Master Plan V5.8 · Weekly Interpretation Spec V2.1<p>页面更新：2026-11-11 · <a href="#overview">回到顶部 ↑</a></p></footer></main>
+<h3>V6.0 阶段路线</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="V6.0 阶段路线"><table class="task-table">
+<tr><th>阶段</th><th>最小产出</th><th>状态</th></tr>
+<tr><td>S1｜恢复与 Gate 1</td><td>LLM API、Structured Output、两 Tool + Agent Loop、FastAPI Demo、RAG 全景</td><td>进行中，待复验</td></tr>
+<tr><td>S2｜RAG 项目 V1</td><td>Document → Retrieval → Answer → Eval → API/Test/Docker</td><td>未进入</td></tr>
+<tr><td>S3｜Agent 工程整合</td><td>Tool + RAG、State、Trace、恢复、HITL、Agent Eval</td><td>未进入</td></tr>
+<tr><td>S4｜Evaluation / Pipeline</td><td>Golden、Batch、Validation、Version、Retry、Regression、Report</td><td>未进入</td></tr>
+<tr><td>S5/S6｜作品集与求职反馈</td><td>简历、项目叙事、投递、面试与 JD 补强</td><td>未进入</td></tr>
+</table></div>
+<p><strong>推进规则：</strong>若没有新证据，继续当前未验收 P0；P1/P2 可取消，不形成历史欠账。阶段日期是建议里程碑，不是自动跳级条件。</p></section><footer class="footer">Master Plan V6.0 · S1 / Gate 1 待复验<p>页面更新：2026-11-18 · <a href="#overview">回到顶部 ↑</a></p></footer></main>
 </body>
 </html>
 
