@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI 学习教程归档</title>
 <link rel="stylesheet" href="assets/style.css?v=weekly-20260919">
-<meta name="description" content="AI 应用工程 / Agent 工程学习教程归档。当前按 V6.0 执行 S1-1：Python/Git/uv/pytest 查漏与 LLM API、usage、错误实验。">
+<meta name="description" content="AI 应用工程 / Agent 工程学习教程归档。当前按 V6.0 继续 S1-1 强化验收：收口 Python/uv/pytest、LLM API、usage 与错误证据。">
 <meta name="color-scheme" content="light">
 </head>
 <body>
@@ -17,7 +17,7 @@
 <h1>每周一小步，<br>把知识变成能运行的代码。</h1>
 <p class="lead">AI 应用工程 / Agent 工程学习归档。每周明确学什么、怎么学、做到什么程度，再用代码和验收留下证据。</p>
 <div class="hero-meta">
-<span class="chip">旧路线 W01–W13 + V6.0 S1-1</span><span class="chip">正常容量：8–10h</span><span class="chip">维持 4h / 加速 12–16h</span><span class="chip">当前计划：V6.0</span><span class="chip">更新：2026.11.18</span>
+<span class="chip">旧路线 W01–W13 + V6.0 S1-1 强化</span><span class="chip">正常容量：8–10h</span><span class="chip">维持 4h / 加速 12–16h</span><span class="chip">当前计划：V6.0</span><span class="chip">更新：2026.11.25</span>
 </div>
 <div class="intro">
 <div class="hero-note">
@@ -29,25 +29,37 @@
 </div>
 </div></section><section class="card" id="current"><h2>
 <span class="section-num">01</span>当前执行切片</h2>
-<p class="muted">截至 2026-11-18，V6.0 的真实进度锚点为 S1 / Gate 1 待复验；首个待学切片仍是 S1-1。旧站点已发布到 W13，不等于用户已经学习或验收到 W13。</p>
+<p class="muted">截至 2026-11-25，学习仓库中仍未找到 S1-1 要求的 llm_api_demo、pytest、usage/error 记录，因此真实进度仍是 S1 / Gate 1 待复验；本期继续 S1-1 强化验收，不按日期进入 S1-2。</p>
 <div class="two-col">
 <article class="feature-week"><span class="badge history">历史教材 · 不计入真实完成</span><p class="week-code">W13</p>
 <h3>API + Test + Logging</h3>
 <p>旧 V5.8 路线的历史教材继续保留，可按需查阅，但不作为 Gate 通过证据。</p>
 <a class="button secondary" href="reports/2026/2026-11-09-w13.html">查看历史 W13 →</a></article>
-<article class="feature-week current"><span class="badge current">当前切片 · 11 月 16 日—11 月 22 日</span><p class="week-code">S1-1</p>
-<h3>Python / Git / uv / pytest 查漏 + LLM API</h3>
-<p>用一个最小可复现项目诊断 Python 工程基础，完成真实 Messages 调用、usage 记录和 API 错误实验。</p>
-<a class="button" href="reports/2026/2026-11-16-s1-1.html">打开 S1-1 教程 →</a></article>
+<article class="feature-week current"><span class="badge current">当前执行 · S1-1 强化验收</span><p class="week-code">S1-1R</p>
+<h3>Python 工程恢复 + LLM API 证据包</h3>
+<p>不重开整套基础课；用消息校验、pytest、真实调用、usage、错误修复和 Git 提交收口 S1-1。</p>
+<a class="button" href="reports/2026/2026-11-23-s1-1-reinforcement.html">打开强化验收教程 →</a></article>
 </div>
 <div class="callout"><strong>V6.0 推进规则：</strong>教材发布 ≠ 用户已学会。没有用户确认或可验证代码、测试和运行记录，下次仍强化当前未验收 P0，不按日期自动推进。</div></section><section class="card" id="archive"><h2>
 <span class="section-num">02</span>全部学习教程 / 解读</h2>
 <ul class="archive-list">
 <li>
+<div class="archive-week">S1-1R</div>
+<div class="archive-body">
+<div class="archive-title">
+<a href="reports/2026/2026-11-23-s1-1-reinforcement.html">Python 工程恢复 + LLM API 证据包</a><span class="badge current">V6.0 当前执行</span>
+</div>
+<div class="summary-lines">
+<span>由于尚无 S1-1 验收证据，本期不推进 S1-2；用消息校验、uv/Git 与 pytest 收口可复现工程基础。</span>
+<span>完成真实模型调用、usage/request id、故意错误和修复记录，形成可检查的最小证据包。</span>
+</div>
+</div>
+</li>
+<li>
 <div class="archive-week">S1-1</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-11-16-s1-1.html">Python / Git / uv / pytest 查漏 + LLM API</a><span class="badge current">V6.0 当前切片</span>
+<a href="reports/2026/2026-11-16-s1-1.html">Python / Git / uv / pytest 查漏 + LLM API</a><span class="badge history">S1-1 首版教材</span>
 </div>
 <div class="summary-lines">
 <span>用 Messages 数据结构、函数、模块、异常和类型注解完成 Python 诊断，并以 uv、pytest、Git 留下可复现工程证据。</span>
@@ -59,7 +71,7 @@
 <div class="archive-week">W13</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-11-09-w13.html">API + Test + Logging</a><span class="badge current">本周</span>
+<a href="reports/2026/2026-11-09-w13.html">API + Test + Logging</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>用 Pydantic Schema、依赖注入和稳定错误映射，把现有 RAG Pipeline 封装为边界清晰的 FastAPI 服务。</span><span>通过 TestClient、dependency override、request_id 日志和 .env 配置，留下正常与异常路径均可复跑的服务证据。</span>
@@ -70,7 +82,7 @@
 <div class="archive-week">W12</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-11-02-w12.html">RAG Evaluation</a><span class="badge history">上周</span>
+<a href="reports/2026/2026-11-02-w12.html">RAG Evaluation</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>建立含 Query、相关 Chunk、参考事实与类别的 Golden Set，分层计算检索命中、召回、排序和回答质量。</span><span>批量复跑 baseline / rerank，记录延迟、Token 与估算成本，形成带失败分类和工程结论的 baseline 报告。</span>
@@ -81,7 +93,7 @@
 <div class="archive-week">W11</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-10-26-w11.html">Retrieval 优化与 Rerank</a><span class="badge history">上周</span>
+<a href="reports/2026/2026-10-26-w11.html">Retrieval 优化与 Rerank</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>建立 Retrieve → Rerank 两阶段检索，用 Cross-Encoder 对候选 Chunk 重新评分，同时保留原始向量分数。</span><span>冻结固定测试集，以 Hit@k、MRR、延迟和失败分类比较 baseline 与改进版，只有证据支持时才保留优化。</span>
@@ -92,7 +104,7 @@
 <div class="archive-week">W10</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-10-19-w10.html">Vector DB / PostgreSQL 工程化</a><span class="badge history">上周</span>
+<a href="reports/2026/2026-10-19-w10.html">Vector DB / PostgreSQL 工程化</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>用 PostgreSQL + pgvector 持久化 Chunk、向量、模型版本和 metadata，建立可重复写入的数据契约。</span><span>完成参数化 Upsert、metadata filter、cosine Top-k 查询，并用基础索引与 EXPLAIN 观察查询路径。</span>
@@ -103,7 +115,7 @@
 <div class="archive-week">W09</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-10-12-w09.html">Embedding + Retriever Baseline</a><span class="badge history">上周</span>
+<a href="reports/2026/2026-10-12-w09.html">Embedding + Retriever Baseline</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>理解 Embedding 与 cosine similarity，用同一模型为 Chunk 和 Query 生成向量，独立实现稳定 Top-k Retriever。</span><span>建立固定查询与预期命中文档，对比 k 值并记录失败案例，留下可复测的检索基线。</span>
@@ -114,7 +126,7 @@
 <div class="archive-week">W08</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-10-05-w08.html">Document Pipeline + Chunk</a><span class="badge history">上周</span>
+<a href="reports/2026/2026-10-05-w08.html">Document Pipeline + Chunk</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>用纯 Python 读取 TXT / Markdown，完成保守清洗与 metadata 设计，建立可重复运行的 Document Pipeline。</span><span>实现固定窗口与段落优先两种 Chunk 策略，对比 chunk size / overlap，并用校验与测试留下工程证据。</span>
@@ -125,7 +137,7 @@
 <div class="archive-week">W07</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-09-28-w07.html">FastAPI + RAG 全景</a><span class="badge history">上周</span>
+<a href="reports/2026/2026-09-28-w07.html">FastAPI + RAG 全景</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>把已有 LLM / Agent Demo 封装为 FastAPI 服务，明确请求、响应、状态码、异常与测试。</span><span>完成最小 Embedding / 相似度实验并画清 RAG 全流程，用证据自查进入工程阶段前的 Gate 1。</span>
@@ -136,7 +148,7 @@
 <div class="archive-week">W06</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-09-21-w06.html">Tool Calling + Agent Loop</a><span class="badge history">上周</span>
+<a href="reports/2026/2026-09-21-w06.html">Tool Calling + Agent Loop</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>以 Hello-Agents 为主教材，学习工具定义、参数校验、结果回传与最小 Agent 循环。</span><span>交付两个工具及验证脚本，覆盖正常调用、直接回答、参数错误、工具失败和步数上限。</span>
@@ -147,7 +159,7 @@
 <div class="archive-week">W05</div>
 <div class="archive-body">
 <div class="archive-title">
-<a href="reports/2026/2026-09-14-w05.html">Structured Output + Context + Agent 全景</a><span class="badge history">上周</span>
+<a href="reports/2026/2026-09-14-w05.html">Structured Output + Context + Agent 全景</a><span class="badge history">历史教材</span>
 </div>
 <div class="summary-lines">
 <span>用 JSON Schema、Pydantic 与 Structured Output 建立可校验的程序接口。</span><span>交付双版本 Demo、失败校验与 Context 对照，画清 Prompt / Workflow / Agent / RAG 边界。</span>
@@ -218,7 +230,7 @@
 <div class="callout warn"><strong>当前结论：</strong>S1 / Gate 1 待复验，S1-1 未证实。旧 W01—W13 页面属于历史教材，不再用“已发布 N/31”推断真实学习完成率。</div>
 <div class="table-wrap" role="region" tabindex="0" aria-label="V6.0 真实进度"><table class="task-table">
 <tr><th scope="col">维度</th><th scope="col">当前状态</th><th scope="col">如何更新</th></tr>
-<tr><td>教材发布进度</td><td>旧路线 W01—W13 保留；V6.0 S1-1 已新增</td><td>HTML 可访问只代表教材已准备</td></tr>
+<tr><td>教材发布进度</td><td>旧路线 W01—W13 保留；V6.0 S1-1 首版与强化验收版已发布</td><td>HTML 可访问只代表教材已准备</td></tr>
 <tr><td><strong>真实已验收进度</strong></td><td><strong>S1 / Gate 1 待复验；S1-1 未证实</strong></td><td>用户明确确认，或代码、测试、真实调用记录可验证</td></tr>
 <tr><td>作品集进度</td><td>项目 A V1/V2、项目 B MVP 均无足够公开闭环证据</td><td>以 README、可复现代码、测试、评测和运行结果更新</td></tr>
 </table></div>
@@ -231,7 +243,7 @@
 <tr><td>S4｜Evaluation / Pipeline</td><td>Golden、Batch、Validation、Version、Retry、Regression、Report</td><td>未进入</td></tr>
 <tr><td>S5/S6｜作品集与求职反馈</td><td>简历、项目叙事、投递、面试与 JD 补强</td><td>未进入</td></tr>
 </table></div>
-<p><strong>推进规则：</strong>若没有新证据，继续当前未验收 P0；P1/P2 可取消，不形成历史欠账。阶段日期是建议里程碑，不是自动跳级条件。</p></section><footer class="footer">Master Plan V6.0 · S1 / Gate 1 待复验<p>页面更新：2026-11-18 · <a href="#overview">回到顶部 ↑</a></p></footer></main>
+<p><strong>推进规则：</strong>若没有新证据，继续当前未验收 P0；P1/P2 可取消，不形成历史欠账。阶段日期是建议里程碑，不是自动跳级条件。</p></section><footer class="footer">Master Plan V6.0 · S1 / Gate 1 待复验<p>页面更新：2026-11-25 · <a href="#overview">回到顶部 ↑</a></p></footer></main>
 </body>
 </html>
 
